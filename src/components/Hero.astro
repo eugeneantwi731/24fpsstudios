@@ -1,0 +1,573 @@
+---
+// Hero.astro — 24fps Studio Hero Section
+// Layout: Left = DCI SVG + buttons | Right = Rive character canvas
+---
+
+<section class="hero">
+  <!-- ── BACKGROUND BLOBS ── -->
+  <div class="hero-bg">
+    <div class="blob blob-pink"></div>
+    <div class="blob blob-teal"></div>
+    <div class="blob blob-yellow"></div>
+  </div>
+
+  <div class="hero-inner">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div class="hero-left">
+
+      <!-- Eyebrow tags -->
+      <div class="eyebrow">
+        <span class="tag tag-pink">ANIMATION.</span>
+        <span class="tag tag-teal">AFRICAN.</span>
+        <span class="tag tag-yellow">ORIGINAL.</span>
+      </div>
+
+      <!-- DCI SVG headline -->
+      <div class="dci-wrap" aria-label="Decode. Create. Inspire.">
+        <svg class="dci-svg" viewBox="0 0 520 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- ── DECODE ── -->
+          <text x="4" y="82" class="dci-word dci-black" font-size="82" font-weight="900" letter-spacing="-2">DECODE.</text>
+          <!-- ── CREATE ── -->
+          <text x="4" y="174" class="dci-word dci-pink" font-size="82" font-weight="900" letter-spacing="-2">CREATE.</text>
+          <!-- ── INSPIRE ── -->
+          <text x="4" y="258" class="dci-word dci-black" font-size="74" font-weight="900" letter-spacing="-2">INSPIRE.</text>
+
+          <!-- Decorative dashes / crown accent -->
+          <line x1="0" y1="6" x2="14" y2="6" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+          <line x1="18" y1="0" x2="32" y2="0" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round" opacity="0.4"/>
+          <line x1="8" y1="13" x2="18" y2="13" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round" opacity="0.3"/>
+          <!-- Yellow crown -->
+          <path d="M260 8 L267 18 L274 8 L278 18 L285 8" stroke="#F5C842" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Teal dashes right -->
+          <line x1="492" y1="160" x2="506" y2="154" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+          <line x1="500" y1="170" x2="518" y2="168" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+          <line x1="494" y1="180" x2="510" y2="178" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+          <!-- Lavender squiggle bottom right -->
+          <path d="M380 252 Q386 246 392 252 Q398 258 404 252 Q410 246 416 252" stroke="#B8A9D9" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M418 252 Q424 246 430 252" stroke="#1A1A1A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+
+      <!-- Sub-copy -->
+      <p class="hero-sub">
+        A student-led animation studio at KNUST creating<br/>
+        original animated films, series &amp; experiences.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="hero-ctas">
+
+        <!-- Glass-pink Reel button -->
+        <a href="#reel" class="btn-reel" id="btn-reel" aria-label="Watch Our Reel">
+          <span class="btn-reel-bg"></span>
+          <span class="btn-reel-shine"></span>
+          <span class="btn-reel-inner">
+            <span class="play-icon">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="9" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/>
+                <path d="M8 7L14 10L8 13V7Z" fill="white"/>
+              </svg>
+            </span>
+            WATCH OUR REEL
+          </span>
+        </a>
+
+        <!-- Ghost arrow button -->
+        <a href="/work" class="btn-work" aria-label="Explore Our Work">
+          EXPLORE OUR WORK
+          <span class="btn-arrow">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 10H16M11 5L16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </a>
+
+      </div>
+
+      <!-- Scroll cue -->
+      <div class="scroll-cue">
+        <svg viewBox="0 0 16 32" fill="none" xmlns="http://www.w3.org/2000/svg" class="scroll-svg">
+          <rect x="1" y="1" width="14" height="22" rx="7" stroke="#1A1A1A" stroke-width="1.4" opacity="0.35"/>
+          <circle cx="8" cy="8" r="2" fill="#1A1A1A" opacity="0.4" class="scroll-dot"/>
+        </svg>
+        <span>SCROLL DOWN</span>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div class="hero-right">
+      <!-- Rive canvas — swap src when Rive file is ready -->
+      <div class="rive-stage">
+        <canvas id="rive-canvas" class="rive-canvas"></canvas>
+
+        <!-- Placeholder illustration until Rive is wired -->
+        <div class="rive-placeholder" id="rive-placeholder" aria-hidden="true">
+          <div class="placeholder-glow"></div>
+          <div class="placeholder-badge">
+            <span class="badge-24">24</span>
+            <span class="badge-fps">fps</span>
+            <span class="badge-dot">·</span>
+          </div>
+          <p class="placeholder-note">Characters coming in Rive ✦</p>
+        </div>
+      </div>
+
+      <!-- Floating stat chips -->
+      <div class="stat-chip chip-top">
+        <span class="chip-num">20+</span>
+        <span class="chip-label">Crew Members</span>
+      </div>
+      <div class="stat-chip chip-mid">
+        <span class="chip-num">3D</span>
+        <span class="chip-label">Animation</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@500;700;800;900&display=swap');
+
+  :root {
+    --pink:   #E8386D;
+    --teal:   #4ECDC4;
+    --yellow: #F5C842;
+    --lav:    #B8A9D9;
+    --black:  #1A1A1A;
+  }
+
+  /* ── HERO SHELL ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding-top: 104px; /* navbar height + gap */
+  }
+
+  /* ── BG BLOBS ── */
+  .hero-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.18;
+  }
+  .blob-pink  { width: 560px; height: 560px; background: var(--pink);   top: -120px; right: 80px; }
+  .blob-teal  { width: 400px; height: 400px; background: var(--teal);   bottom: -80px; right: 240px; opacity: 0.13; }
+  .blob-yellow{ width: 260px; height: 260px; background: var(--yellow); top: 40%;  left: 5%; opacity: 0.12; }
+
+  /* ── INNER GRID ── */
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 60px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* ══════════════════════════════
+     LEFT COLUMN
+  ══════════════════════════════ */
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Eyebrow */
+  .eyebrow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s ease both;
+  }
+  .tag {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .tag-pink   { color: var(--pink);   background: rgba(232,56,109,0.1); }
+  .tag-teal   { color: #2bb8b0;       background: rgba(78,205,196,0.1); }
+  .tag-yellow { color: #c9a400;       background: rgba(245,200,66,0.1); }
+
+  /* DCI SVG */
+  .dci-wrap {
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .dci-svg {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    overflow: visible;
+  }
+  .dci-word {
+    font-family: 'Raleway', sans-serif;
+    font-weight: 900;
+  }
+  .dci-black { fill: var(--black); }
+  .dci-pink  { fill: var(--pink);  }
+
+  /* Sub-copy */
+  .hero-sub {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #555;
+    max-width: 380px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* ── BUTTONS ── */
+  .hero-ctas {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  /* Glass-pink reel button */
+  .btn-reel {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.25s;
+    box-shadow:
+      0 4px 20px rgba(232,56,109,0.4),
+      0 0 0 1px rgba(255,255,255,0.25) inset,
+      0 1px 0 rgba(255,255,255,0.35) inset;
+  }
+  .btn-reel:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 32px rgba(232,56,109,0.55),
+      0 0 0 1px rgba(255,255,255,0.3) inset,
+      0 1px 0 rgba(255,255,255,0.4) inset;
+  }
+  .btn-reel:active { transform: translateY(0); }
+
+  /* Opaque pink background layer */
+  .btn-reel-bg {
+    position: absolute;
+    inset: 0;
+    background: rgba(232, 56, 109, 0.82);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    border-radius: inherit;
+    z-index: 0;
+  }
+
+  /* Glass shine sweep */
+  .btn-reel-shine {
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,255,255,0.25) 50%,
+      transparent 70%
+    );
+    z-index: 1;
+    border-radius: inherit;
+    transition: left 0.5s ease;
+    pointer-events: none;
+  }
+  .btn-reel:hover .btn-reel-shine {
+    left: 130%;
+    transition: left 0.5s ease;
+  }
+
+  /* Text + icon layer */
+  .btn-reel-inner {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.9rem 1.5rem;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #fff;
+    white-space: nowrap;
+    /* Subtle glass frost on text */
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .play-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .play-icon svg { width: 22px; height: 22px; }
+
+  /* Ghost arrow button */
+  .btn-work {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--black);
+    padding: 0.9rem 1.25rem 0.9rem 0;
+    border-radius: 999px;
+    transition: gap 0.2s, color 0.2s;
+    text-decoration: none;
+    white-space: nowrap;
+    border: none;
+    background: none;
+  }
+  .btn-work:hover { gap: 16px; color: var(--pink); }
+  .btn-work:hover .btn-arrow { background: rgba(232,56,109,0.1); border-color: rgba(232,56,109,0.3); }
+
+  .btn-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(26,26,26,0.2);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-arrow svg { width: 18px; height: 18px; }
+
+  /* Scroll cue */
+  .scroll-cue {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.4;
+    animation: fadeUp 0.6s 0.45s ease both;
+  }
+  .scroll-svg { width: 16px; height: 32px; }
+  .scroll-dot {
+    animation: scrollBob 1.8s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .scroll-cue span {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--black);
+  }
+
+  /* ══════════════════════════════
+     RIGHT COLUMN
+  ══════════════════════════════ */
+  .hero-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 520px;
+    animation: fadeIn 0.8s 0.2s ease both;
+  }
+
+  .rive-stage {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Actual Rive canvas — hidden until JS loads it */
+  .rive-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none; /* shown by JS once Rive loads */
+  }
+
+  /* Placeholder until Rive is wired */
+  .rive-placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 32px;
+    background: linear-gradient(135deg, rgba(232,56,109,0.06) 0%, rgba(78,205,196,0.06) 100%);
+    border: 1.5px dashed rgba(232,56,109,0.2);
+    overflow: hidden;
+  }
+  .placeholder-glow {
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,56,109,0.2) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .placeholder-badge {
+    position: relative;
+    z-index: 1;
+    font-family: 'Raleway', sans-serif;
+    font-size: 7rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -4px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .badge-24  { color: var(--pink); }
+  .badge-fps { color: var(--black); font-size: 5.5rem; }
+  .badge-dot { color: var(--pink); font-size: 8rem; margin-left: -8px; line-height: 0.6; }
+  .placeholder-note {
+    position: relative;
+    z-index: 1;
+    margin-top: 16px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #aaa;
+  }
+
+  /* Floating stat chips */
+  .stat-chip {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 16px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    animation: float 4s ease-in-out infinite;
+  }
+  .chip-top { top: 12%; right: -4%; animation-delay: 0s; }
+  .chip-mid { bottom: 22%; left: -4%; animation-delay: 1.5s; }
+
+  .chip-num {
+    font-family: 'Raleway', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--pink);
+    line-height: 1;
+  }
+  .chip-label {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  /* ══════════════════════════════
+     ANIMATIONS
+  ══════════════════════════════ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1);    opacity: 0.6; }
+    50%       { transform: scale(1.15); opacity: 1; }
+  }
+  @keyframes scrollBob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(8px); }
+  }
+
+  /* ══════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════ */
+  @media (max-width: 900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      padding: 40px 24px 60px;
+      text-align: center;
+    }
+    .eyebrow { justify-content: center; }
+    .dci-svg { max-width: 360px; margin: 0 auto; }
+    .hero-sub { margin: 0 auto; text-align: center; }
+    .hero-ctas { justify-content: center; }
+    .scroll-cue { justify-content: center; }
+    .hero-right { min-height: 340px; order: -1; }
+    .chip-top { top: 5%;  right: 5%; }
+    .chip-mid { bottom: 5%; left: 5%; }
+    .rive-stage { max-width: 340px; }
+  }
+</style>
+
+<!-- 
+  ── RIVE INTEGRATION ──
+  When your Rive file is ready:
+  1. Add the Rive runtime: <script src="https://unpkg.com/@rive-app/canvas@latest/rive.js"></script>
+     (or install via npm: npm install @rive-app/canvas)
+  2. Uncomment and update the block below with your .riv file URL
+  3. Remove rive-placeholder display block / set rive-canvas to display:block
+-->
+<script>
+  // ── Rive stub — ready to activate ──
+  // import { Rive } from '@rive-app/canvas';
+  //
+  // const r = new Rive({
+  //   src: '/animations/hero-characters.riv',
+  //   canvas: document.getElementById('rive-canvas'),
+  //   autoplay: true,
+  //   stateMachines: 'HeroIdle',
+  //   onLoad: () => {
+  //     r.resizeDrawingSurfaceToCanvas();
+  //     document.getElementById('rive-canvas').style.display = 'block';
+  //     document.getElementById('rive-placeholder').style.display = 'none';
+  //   },
+  // });
+
+  // Parallax blobs on mouse move
+  const blobs = document.querySelectorAll('.blob');
+  document.addEventListener('mousemove', (e) => {
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+    const dx = (e.clientX - cx) / cx;
+    const dy = (e.clientY - cy) / cy;
+    blobs.forEach((b, i) => {
+      const depth = (i + 1) * 14;
+      b.style.transform = `translate(${dx * depth}px, ${dy * depth}px)`;
+    });
+  });
+</script>

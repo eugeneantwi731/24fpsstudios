@@ -1,0 +1,365 @@
+---
+// Navbar.astro
+const currentPath = Astro.url.pathname;
+
+const links = [
+  { label: 'HOME',      href: '/'          },
+  { label: 'WORK',      href: '/work'       },
+  { label: 'TEAM',      href: '/team'       },
+  { label: 'ABOUT',     href: '/about'      },
+  { label: 'RESOURCES', href: '/resources'  },
+  { label: 'BLOG',      href: '/blog'       },
+];
+
+function isActive(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<header class="nav-wrap">
+  <nav class="navbar">
+
+    <!-- ── LOGO SLOT ── -->
+    <a href="/" class="nav-logo" aria-label="24fps Home">
+      <img src="/images/24fps-nav.svg" alt="24fps" class="logo-img" />
+    </a>
+
+    <!-- ── NAV LINKS ── -->
+    <ul class="nav-links" role="navigation">
+      {links.map(link => (
+        <li class="nav-item">
+          <a
+            href={link.href}
+            class={`nav-link ${isActive(link.href) ? 'active' : ''}`}
+          >
+            {link.label}
+            {isActive(link.href) && <span class="active-dot" aria-hidden="true"></span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <!-- ── CTA ── -->
+    <a href="/join" class="nav-cta">
+      JOIN OUR CREW
+      <span class="cta-arrow" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5L8 1Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </a>
+
+    <!-- ── MOBILE HAMBURGER ── -->
+    <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+  </nav>
+</header>
+
+<!-- ── MOBILE MENU ── -->
+<div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+  {links.map(link => (
+    <a href={link.href} class={`mobile-link ${isActive(link.href) ? 'active' : ''}`}>
+      {link.label}
+    </a>
+  ))}
+  <a href="/join" class="mobile-cta">JOIN OUR CREW ↗</a>
+</div>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@500;700;800;900&display=swap');
+
+  /* ── LOCAL VARS ── */
+  :root {
+    --pink:  #E8386D;
+    --black: #1A1A1A;
+  }
+
+  /* ── WRAPPER — positions the bar with space around it ── */
+  .nav-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 16px 24px;
+    pointer-events: none; /* lets clicks pass through the gap */
+  }
+
+  /* ── THE NAVBAR BAR ITSELF ── */
+  .navbar {
+    pointer-events: all;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 48px;
+    height: 72px;
+    border-radius: 20px;
+
+    /* Linear gradient: #FCF8F8 > #FFFFFF > #FCF8F8 */
+    background: linear-gradient(
+      to right,
+      #FCF8F8 0%,
+      #FFFFFF 25%,
+      #FFFFFF 75%,
+      #FCF8F8 100%
+    );
+
+    border: none;
+    box-shadow: none;
+    position: relative;
+    overflow: visible;
+  }
+
+  /* Gradient shadow — same width as navbar, 4-color, pink 40% teal 20% */
+  .navbar::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 5px;
+    right: 5px;
+    height: 60px;
+    border-radius: 0;
+    background: linear-gradient(
+      to right,
+      rgba(230, 80, 125, 0.2) 0%,
+      rgba(63, 211, 213, 0.1) 25%,
+      rgba(230, 80, 125, 0.2) 50%,
+      rgba(63, 211, 213, 0.1) 75%,
+      rgba(230, 80, 125, 0.2) 100%
+    );
+    filter: blur(10.8px);
+    opacity: 1;
+    z-index: -1;
+  }
+
+  /* Glass edge — bright light reflection on border, no color tint */
+  .navbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 2px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ── LOGO ── */
+  .nav-logo {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .logo-img {
+    height: 48px;
+    width: auto;
+    display: block;
+  }
+
+  /* ── NAV LINKS ── */
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0rem;
+    list-style: none;
+    margin: 0 auto;
+  }
+
+  .nav-item { position: relative; }
+
+  .nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    color: var(--black);
+    padding: 0.4rem 1.25rem;
+    transition: color 0.2s;
+    position: relative;
+    background: none;
+  }
+
+  .nav-link:hover {
+    color: var(--pink);
+    background: none;
+  }
+
+  .nav-link.active {
+    color: var(--pink);
+  }
+
+  /* Active dot */
+  .active-dot {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--pink);
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* ── CTA BUTTON ── */
+  .nav-cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--pink);
+    color: #fff;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    padding: 0.85rem 1.25rem;
+    border-radius: 999px;
+    transition: all 0.25s;
+    box-shadow: 0 4px 16px rgba(232, 56, 109, 0.35);
+    white-space: nowrap;
+  }
+
+  .nav-cta:hover {
+    background: #d42d60;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(232, 56, 109, 0.45);
+  }
+
+  /* Sparkle icon — no circle, just the outline icon */
+  .cta-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .cta-arrow svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  /* ── HAMBURGER ── */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--black);
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  /* ── MOBILE MENU ── */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 104px;
+    left: 24px;
+    right: 24px;
+    background: #FFFFFF;
+    border-radius: 20px;
+    padding: 1.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    z-index: 998;
+    box-shadow:
+      0 8px 32px rgba(232, 56, 109, 0.12),
+      0 16px 48px rgba(63, 211, 213, 0.08),
+      0 24px 64px rgba(0,0,0,0.08);
+    border: 1px solid rgba(255,255,255,0.9);
+  }
+
+  .mobile-menu.open { display: flex; }
+
+  .mobile-link {
+    font-family: 'Raleway', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    color: var(--black);
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .mobile-link:hover,
+  .mobile-link.active {
+    background: rgba(232, 56, 109, 0.06);
+    color: var(--pink);
+  }
+
+  .mobile-cta {
+    font-family: 'Raleway', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    background: var(--pink);
+    color: #fff;
+    padding: 0.9rem 1.5rem;
+    border-radius: 999px;
+    text-align: center;
+    margin-top: 0.5rem;
+    box-shadow: 0 4px 16px rgba(232, 56, 109, 0.35);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .nav-cta   { display: none; }
+    .hamburger { display: flex; }
+  }
+</style>
+
+<script>
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  hamburger?.addEventListener('click', () => {
+    const isOpen = mobileMenu?.classList.contains('open');
+    mobileMenu?.classList.toggle('open');
+    hamburger?.setAttribute('aria-expanded', String(!isOpen));
+    document.body.style.overflow = isOpen ? '' : 'hidden';
+  });
+
+  // Close on link click
+  document.querySelectorAll('.mobile-link, .mobile-cta').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu?.classList.remove('open');
+      hamburger?.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    });
+  });
+</script>
