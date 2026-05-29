@@ -1,0 +1,564 @@
+---
+// Footer.astro — 24fps Studio
+// Dark 3-column footer matching the design reference.
+// Rive clapper board placeholder ready for .riv integration.
+---
+
+<footer class="footer">
+
+  <!-- ── DECORATIVE SQUIGGLES (SVG — drawn lines from reference) ── -->
+  <div class="footer-deco" aria-hidden="true">
+
+    <!-- top-left teal sparkle -->
+    <svg class="deco deco--sparkle-tl" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2 C20 2 21 10 28 14 C21 18 20 26 20 26 C20 26 19 18 12 14 C19 10 20 2 20 2Z" stroke="#4ECDC4" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+      <line x1="30" y1="6" x2="36" y2="6" stroke="#4ECDC4" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="33" y1="3" x2="33" y2="9" stroke="#4ECDC4" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+
+    <!-- yellow squiggle top-center -->
+    <svg class="deco deco--squiggle-top" viewBox="0 0 80 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 18 C10 6, 18 6, 24 14 C30 22, 38 22, 44 14 C50 6, 58 6, 64 14 C70 22, 76 18, 78 14" stroke="#F5C842" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    </svg>
+
+    <!-- top-right film reel area accent dots -->
+    <svg class="deco deco--dot-tr" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="6" stroke="#F5C842" stroke-width="1.5" fill="none"/>
+      <circle cx="8" cy="8" r="2" fill="#F5C842"/>
+    </svg>
+
+    <!-- pink vertical divider lines — left -->
+    <div class="deco deco--divider-left"></div>
+    <!-- pink vertical divider lines — right -->
+    <div class="deco deco--divider-right"></div>
+
+    <!-- bottom-left purple squiggle -->
+    <svg class="deco deco--squiggle-bl" viewBox="0 0 70 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 14 C10 4, 16 4, 22 10 C28 16, 34 16, 40 10 C46 4, 52 4, 58 10 C64 16, 68 12, 70 10" stroke="#B8A9D9" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    </svg>
+
+    <!-- teal X mark -->
+    <svg class="deco deco--x" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="3" y1="3" x2="17" y2="17" stroke="#4ECDC4" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="17" y1="3" x2="3" y2="17" stroke="#4ECDC4" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+
+    <!-- pink X mark bottom right -->
+    <svg class="deco deco--x2" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="3" y1="3" x2="17" y2="17" stroke="#E8386D" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="17" y1="3" x2="3" y2="17" stroke="#E8386D" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+
+    <!-- white dash marks (the short lines in reference) -->
+    <svg class="deco deco--dashes-left" viewBox="0 0 30 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="8"  x2="12" y2="4"  stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="4" y1="20" x2="18" y2="16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+      <line x1="0" y1="32" x2="10" y2="30" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+
+    <!-- pink sparkle top-right area -->
+    <svg class="deco deco--sparkle-tr" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 2 C15 2 16 9 21 12 C16 15 15 22 15 22 C15 22 14 15 9 12 C14 9 15 2 15 2Z" stroke="#E8386D" stroke-width="1.5" fill="none"/>
+    </svg>
+
+    <!-- yellow sparkle bottom-right -->
+    <svg class="deco deco--sparkle-br" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 2 C18 2 19 11 26 15 C19 19 18 28 18 28 C18 28 17 19 10 15 C17 11 18 2 18 2Z" stroke="#F5C842" stroke-width="1.8" fill="none"/>
+    </svg>
+
+    <!-- white dashes right side -->
+    <svg class="deco deco--dashes-right" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0"  y1="6"  x2="14" y2="2"  stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+      <line x1="4"  y1="16" x2="20" y2="12" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+
+  </div>
+
+  <!-- ── MAIN FOOTER GRID ── -->
+  <div class="footer-inner">
+
+    <!-- COL 1: Brand -->
+    <div class="footer-col footer-brand">
+      <a href="/" class="footer-logo" aria-label="24fps home">
+        <img src="/images/24fps-footer.svg" alt="24fps Decode Animation Lab" class="footer-logo-img" />
+      </a>
+
+      <p class="footer-tagline">STUDENT-RUN. STORY-DRIVEN.<br/>MADE IN KNUST, GHANA.</p>
+
+      <p class="footer-slogan">Decode. Create. Inspire.</p>
+
+      <!-- Social icons -->
+      <div class="footer-socials">
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+            <circle cx="12" cy="12" r="4"/>
+            <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </a>
+        <a href="https://tiktok.com" target="_blank" rel="noopener" class="social-link" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+          </svg>
+        </a>
+        <a href="https://youtube.com" target="_blank" rel="noopener" class="social-link" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="3"/>
+            <polygon points="10,9 16,12 10,15" fill="currentColor" stroke="none"/>
+          </svg>
+        </a>
+        <a href="https://behance.net" target="_blank" rel="noopener" class="social-link" aria-label="Behance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <text x="5" y="16" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">Bē</text>
+          </svg>
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="4"/>
+            <line x1="8" y1="10" x2="8" y2="17"/>
+            <line x1="8" y1="7" x2="8" y2="7.5" stroke-width="2.5"/>
+            <path d="M12 10v7M12 13a3 3 0 0 1 6 0v4"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- COL 2: Quick Links -->
+    <div class="footer-col footer-links-col">
+      <h3 class="footer-heading">QUICK LINKS</h3>
+      <nav class="footer-nav">
+        {[
+          { label: 'Home',         href: '/'          },
+          { label: 'Work',         href: '/work'       },
+          { label: 'Team',         href: '/team'       },
+          { label: 'About',        href: '/about'      },
+          { label: 'Resources',    href: '/resources'  },
+          { label: 'Blog',         href: '/blog'       },
+          { label: 'Join Our Crew',href: '/join'       },
+        ].map(link => (
+          <a href={link.href} class="footer-link">
+            <span class="footer-arrow">→</span>
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </div>
+
+    <!-- COL 3: Get In Touch -->
+    <div class="footer-col footer-contact">
+      <h3 class="footer-heading">GET IN TOUCH</h3>
+
+      <a href="mailto:hello@24fps.studio" class="footer-email">
+        <svg class="email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="3"/>
+          <path d="M2 7l10 7 10-7"/>
+        </svg>
+        hello@24fps.studio
+      </a>
+
+      <p class="footer-contact-body">
+        We're always open to new stories,<br/>
+        collaborations and good ideas.
+      </p>
+      <p class="footer-contact-cta">
+        <strong>Let's animate the future — together!</strong>
+      </p>
+
+      <!-- Rive clapper board — swap canvas for <canvas> + Rive runtime when .riv is ready -->
+      <div class="clapper-wrap">
+        <!-- RIVE INTEGRATION POINT
+             When your .riv file is ready:
+             1. npm install @rive-app/canvas
+             2. Replace the placeholder below with:
+                <canvas id="clapper-rive" width="260" height="160"></canvas>
+             3. Add the script block at bottom of this file
+        -->
+        <div class="clapper-placeholder" aria-label="Clapper board animation">
+          <svg class="clapper-svg" viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Board body -->
+            <rect x="20" y="55" width="220" height="95" rx="8" fill="#1a1a1a" stroke="white" stroke-width="2"/>
+            <!-- Clapper arm -->
+            <rect x="20" y="30" width="220" height="30" rx="4" fill="#1a1a1a" stroke="white" stroke-width="2"/>
+            <!-- Clapper stripes -->
+            <clipPath id="arm-clip"><rect x="20" y="30" width="220" height="30" rx="4"/></clipPath>
+            <g clip-path="url(#arm-clip)">
+              <rect x="20"  y="30" width="30" height="30" fill="white"/>
+              <rect x="80"  y="30" width="30" height="30" fill="white"/>
+              <rect x="140" y="30" width="30" height="30" fill="white"/>
+              <rect x="200" y="30" width="30" height="30" fill="white"/>
+            </g>
+            <!-- Hinge circles -->
+            <circle cx="35"  cy="55" r="5" fill="#333" stroke="white" stroke-width="1.5"/>
+            <circle cx="225" cy="55" r="5" fill="#333" stroke="white" stroke-width="1.5"/>
+            <!-- Scene / Take / FPS labels -->
+            <line x1="110" y1="60" x2="110" y2="145" stroke="white" stroke-width="1.5" opacity="0.4"/>
+            <line x1="180" y1="60" x2="180" y2="145" stroke="white" stroke-width="1.5" opacity="0.4"/>
+            <line x1="30"  y1="100" x2="240" y2="100" stroke="white" stroke-width="1.5" opacity="0.4"/>
+            <!-- Labels top row -->
+            <text x="65"  y="88" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="600" font-size="11" fill="white" opacity="0.7">SCENE</text>
+            <text x="145" y="88" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="600" font-size="11" fill="white" opacity="0.7">TAKE</text>
+            <text x="210" y="88" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="600" font-size="11" fill="white" opacity="0.7">FPS</text>
+            <!-- Values bottom row -->
+            <text x="65"  y="130" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="900" font-size="28" fill="#E8386D">24</text>
+            <text x="145" y="130" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="900" font-size="28" fill="white">1</text>
+            <text x="210" y="130" text-anchor="middle" font-family="Raleway, sans-serif" font-weight="900" font-size="28" fill="white">24</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── BOTTOM BAR ── -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-inner">
+      <span class="footer-copy">
+        <svg class="copy-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="8.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M12.5 7.5A3 3 0 1 0 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        2025 24fps (Decode Animation Lab). All rights reserved.
+      </span>
+
+      <!-- bottom center squiggle -->
+      <svg class="bottom-squiggle" viewBox="0 0 80 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 15 C10 5, 16 5, 22 11 C28 17, 34 17, 40 11 C46 5, 52 5, 58 11 C64 17, 70 13, 76 10" stroke="#F5C842" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      </svg>
+
+      <span class="footer-made">
+        Made at KNUST
+        <svg class="heart-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 16s-7-4.5-7-9a4 4 0 0 1 7-2.65A4 4 0 0 1 17 7c0 4.5-7 9-7 9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    </div>
+  </div>
+
+</footer>
+
+<style>
+  /* ── FOOTER SHELL ── */
+  .footer {
+    position: relative;
+    background: #111111;
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── DECORATIVE LAYER ── */
+  .footer-deco {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .deco {
+    position: absolute;
+  }
+
+  .deco--sparkle-tl  { top: 28px;  left: 48px;   width: 44px;  height: 44px; }
+  .deco--squiggle-top{ top: 22px;  left: 50%;    width: 120px; height: 36px; transform: translateX(-50%); opacity: 0.9; }
+  .deco--dot-tr      { top: 32px;  right: 340px; width: 20px;  height: 20px; }
+  .deco--sparkle-tr  { top: 18px;  right: 280px; width: 34px;  height: 34px; opacity: 0.8; }
+  .deco--dashes-left { top: 50%;   left: 24px;   width: 30px;  height: 48px; transform: translateY(-50%); }
+  .deco--squiggle-bl { bottom: 60px; left: 200px; width: 100px; height: 24px; opacity: 0.8; }
+  .deco--x           { bottom: 68px; left: 170px; width: 22px;  height: 22px; }
+  .deco--x2          { bottom: 80px; right: 460px; width: 20px; height: 20px; }
+  .deco--sparkle-br  { bottom: 100px; right: 24px; width: 38px; height: 38px; }
+  .deco--dashes-right{ top: 40px;   right: 120px; width: 30px;  height: 36px; opacity: 0.7; }
+
+  /* Pink dividers between columns */
+  .deco--divider-left,
+  .deco--divider-right {
+    top: 40px;
+    bottom: 40px;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #E8386D 20%, #E8386D 80%, transparent);
+    opacity: 0.6;
+  }
+  .deco--divider-left  { left: calc(33.33% + 0px); }
+  .deco--divider-right { left: calc(66.66% + 0px); }
+
+  /* ── INNER GRID ── */
+  .footer-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    padding: 64px 60px 48px;
+  }
+
+  .footer-col {
+    padding: 0 40px;
+  }
+
+  .footer-col:first-child { padding-left: 0; }
+  .footer-col:last-child  { padding-right: 0; }
+
+  /* ── COL 1: BRAND ── */
+  .footer-logo { display: inline-block; margin-bottom: 20px; }
+  .footer-logo-img { height: 64px; width: auto; }
+
+  /* Fallback if SVG not found yet */
+  .footer-logo-img[src=""] ,
+  .footer-logo-img:not([src]) {
+    display: none;
+  }
+
+  /* Temporary text logo fallback */
+  .footer-logo::after {
+    content: '24fps°';
+    font-family: 'Raleway', sans-serif;
+    font-weight: 900;
+    font-size: 3rem;
+    color: white;
+    display: block;
+  }
+  .footer-logo:has(img[src]) .footer-logo-img { display: block; }
+  .footer-logo:has(img[src])::after { display: none; }
+
+  .footer-tagline {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.7;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+
+  .footer-slogan {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 28px;
+    letter-spacing: 0.01em;
+  }
+
+  /* Social icons */
+  .footer-socials {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    color: white;
+    transition: border-color 0.2s, color 0.2s, transform 0.2s;
+  }
+
+  .social-link:hover {
+    border-color: #E8386D;
+    color: #E8386D;
+    transform: translateY(-2px);
+  }
+
+  .social-link svg { width: 18px; height: 18px; }
+
+  /* ── COL 2: QUICK LINKS ── */
+  .footer-heading {
+    font-size: 1.45rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: white;
+    margin-bottom: 6px;
+    position: relative;
+    padding-bottom: 12px;
+  }
+
+  /* Pink underline below heading */
+  .footer-heading::after {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 3px;
+    background: #E8386D;
+    border-radius: 2px;
+    margin-top: 8px;
+  }
+
+  .footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 16px;
+  }
+
+  .footer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    padding: 6px 0;
+    transition: color 0.2s, gap 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .footer-link:hover {
+    color: white;
+    gap: 16px;
+  }
+
+  .footer-link:last-child { color: #E8386D; }
+  .footer-link:last-child:hover { color: #ff6b96; }
+
+  .footer-arrow {
+    color: #E8386D;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .footer-link:hover .footer-arrow { transform: translateX(3px); }
+
+  /* ── COL 3: CONTACT ── */
+  .footer-email {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #E8386D;
+    margin-top: 16px;
+    margin-bottom: 18px;
+    transition: color 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .footer-email:hover { color: #ff6b96; }
+
+  .email-icon { width: 22px; height: 22px; }
+
+  .footer-contact-body {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.65;
+    margin-bottom: 10px;
+  }
+
+  .footer-contact-cta {
+    font-size: 0.9rem;
+    color: white;
+    font-weight: 700;
+    margin-bottom: 28px;
+  }
+
+  /* Clapper board */
+  .clapper-wrap {
+    margin-top: 8px;
+  }
+
+  .clapper-placeholder {
+    display: inline-block;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .clapper-svg {
+    width: 240px;
+    height: auto;
+    display: block;
+  }
+
+  /* ── BOTTOM BAR ── */
+  .footer-bottom {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .footer-bottom-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .footer-copy,
+  .footer-made {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.04em;
+  }
+
+  .footer-made { color: rgba(255,255,255,0.7); font-weight: 700; }
+
+  .copy-icon  { width: 18px; height: 18px; flex-shrink: 0; }
+  .heart-icon { width: 18px; height: 18px; flex-shrink: 0; color: #E8386D; }
+
+  .bottom-squiggle {
+    width: 80px;
+    height: auto;
+    opacity: 0.75;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 960px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+      padding: 48px 32px 32px;
+      gap: 48px;
+    }
+
+    .footer-col { padding: 0; }
+
+    .deco--divider-left,
+    .deco--divider-right { display: none; }
+
+    .footer-bottom-inner {
+      padding: 16px 32px;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .bottom-squiggle { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .footer-inner { padding: 40px 24px 28px; }
+    .footer-bottom-inner { padding: 16px 24px; }
+    .clapper-svg { width: 200px; }
+  }
+</style>
+
+<!--
+  ── RIVE INTEGRATION (uncomment when .riv file is ready) ──
+
+  <script>
+    import { Rive } from '@rive-app/canvas';
+
+    const r = new Rive({
+      src: '/animations/clapper.riv',
+      canvas: document.getElementById('clapper-rive'),
+      autoplay: true,
+      stateMachines: 'State Machine 1',
+      onLoad: () => r.resizeDrawingSurfaceToCanvas(),
+    });
+  </script>
+
+  Also replace .clapper-placeholder with:
+  <canvas id="clapper-rive" width="260" height="160"></canvas>
+-->

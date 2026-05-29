@@ -1,0 +1,2322 @@
+---
+// src/pages/member-form.astro
+// 24fps Decode Animation Lab - Member Profile Submission Form
+// No Navbar or Footer - standalone page shared via WhatsApp link
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Profile Submission - 24fps Decode Animation Lab</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- ── PAGE WRAPPER ── -->
+  <main class="page">
+
+    <!-- Decorative scribbles – sit on the page background, not inside hero -->
+    <img src="/images/crown-scribble.svg"      class="deco deco--crown"     alt="" aria-hidden="true" />
+    <img src="/images/film-strip.svg"           class="deco deco--film"      alt="" aria-hidden="true" />
+    <img src="/images/star-scribble-1.svg"      class="deco deco--star1"     alt="" aria-hidden="true" />
+    <img src="/images/star-scribble-2.svg"      class="deco deco--star2"     alt="" aria-hidden="true" />
+    <img src="/images/cross-scribble-1.svg"     class="deco deco--cross1"    alt="" aria-hidden="true" />
+    <img src="/images/cross-scribble-2.svg"     class="deco deco--cross2"    alt="" aria-hidden="true" />
+    <img src="/images/line-scribble.svg"        class="deco deco--line"      alt="" aria-hidden="true" />
+    <img src="/images/star-line-scribble.svg"   class="deco deco--starline"  alt="" aria-hidden="true" />
+
+    <!-- ── HERO ── -->
+    <header class="hero">
+      <div class="hero__inner">
+        <!-- Logo -->
+        <a href="/" class="hero__logo" aria-label="24fps Home">
+          <img src="/images/24fps-header-logo.svg" alt="24fps Decode Animation Lab" />
+        </a>
+
+        <div class="hero__title-wrap">
+          <h1 class="hero__title">
+            MEMBER PROFILE<br/>
+            <span class="hero__title--pink">SUBMISSION FORM</span>
+          </h1>
+          <img src="/images/three-sparks.svg" class="sparks-inline" alt="" aria-hidden="true" />
+        </div>
+        <p class="hero__sub">
+          This form collects the information that will appear on your official
+          profile page on the 24fps Decode Animation Lab website.
+          Take your time - this is how the world sees you.
+        </p>
+      </div>
+    </header>
+
+    <!-- ── FORM BODY ── -->
+    <section class="form-wrap">
+      <form id="member-form" novalidate>
+
+        <!-- ══ SECTION 01: IDENTITY ══ -->
+        <div class="section" id="sec-01">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--pink)">01</span>
+                <div class="section__title-wrap">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Identity</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#E9295D"/></svg>
+                  </div>
+                  <p class="section__sub">Who are you?</p>
+                </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/identity-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+          <div class="fields fields--identity">
+            <div class="field">
+              <label class="label" for="full-name">Full Name <span class="req">*</span></label>
+              <input class="input" id="full-name" name="full_name" type="text"
+                     placeholder="e.g. John Delali Attah" autocomplete="name" required />
+              <span class="err" id="err-full-name"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="initials">Initials <span class="req">*</span></label>
+              <input class="input" id="initials" name="initials" type="text"
+                     placeholder="e.g. JDA" maxlength="3" required />
+              <span class="hint">2–3 characters from your name</span>
+              <span class="err" id="err-initials"></span>
+            </div>
+            <div class="field field--nickname">
+              <label class="label" for="nickname">Nickname <span class="opt">optional</span></label>
+              <input class="input" id="nickname" name="nickname" type="text" placeholder="e.g. Hohoe Dr. Strange" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 02: YOUR ROLE ══ -->
+        <div class="section" id="sec-02">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--teal)">02</span>
+                <div class="section__title-wrap">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Your Role</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#3FD3D5"/></svg>
+                  </div>
+                  <p class="section__sub">Where do you fit in the studio?</p>
+                </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/your-role-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+          <div class="fields fields--3">
+
+            <!-- Category -->
+            <div class="field">
+              <label class="label" for="category-btn">Status <span class="req">*</span></label>
+              <div class="category-dd-wrap" id="category-dd-wrap">
+                <button type="button" class="input category-dd-trigger" id="category-btn"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span class="category-dd-label" id="category-dd-label">Student, Alumni or Faculty?</span>
+                  <svg class="category-dd-caret" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <ul class="category-dd-list" id="category-dd-list" role="listbox" style="display:none">
+                  <li class="category-dd-item" role="option" data-value="student">Student</li>
+                  <li class="category-dd-item" role="option" data-value="alumni">Alumni</li>
+                  <li class="category-dd-item" role="option" data-value="faculty">Faculty</li>
+                </ul>
+              </div>
+              <input type="hidden" id="category" name="category" required />
+              <span class="err" id="err-category"></span>
+            </div>
+
+            <!-- Program - text input, not dropdown -->
+            <div class="field">
+              <label class="label" for="program">Program <span class="opt">optional</span></label>
+              <input class="input" id="program" name="program" type="text"
+                     placeholder="e.g. Communication Design" />
+              <span class="hint">Your department / programme</span>
+            </div>
+
+            <!-- Role / Title -->
+            <div class="field">
+              <label class="label" for="role">Role / Title <span class="req">*</span></label>
+              <input class="input" id="role" name="role" type="text"
+                     placeholder="e.g. 3D Modeler, Sound Designer" required />
+              <span class="hint">Your specific studio role</span>
+              <span class="err" id="err-role"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 03: EXPERTISE ══ -->
+        <div class="section" id="sec-03">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--yellow)">03</span>
+                <div class="section__title-wrap">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Expertise</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#FEC843"/></svg>
+                  </div>
+                  <p class="section__sub">What are your skills?</p>
+                </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/expertise-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+
+          <p class="section__instructions">
+            Add your skills. Type a skill and press Enter to add.<br/>
+            <strong>* At least one skill is required.</strong>
+          </p>
+
+          <div class="tag-input-wrap" id="tag-wrap">
+            <div class="tag-input-row">
+              <input class="input tag-input" id="expertise-text" type="text"
+                     placeholder="Type a skill and press Enter…" autocomplete="off" />
+              <button type="button" class="add-tag-btn" id="add-tag-btn" aria-label="Add skill">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                Add
+              </button>
+            </div>
+            <div class="tags-list" id="tags-list"></div>
+          </div>
+          <span class="err" id="err-expertise"></span>
+          <input type="hidden" id="expertise-hidden" name="expertise" />
+        </div>
+
+        <!-- ══ SECTION 04: BIO ══ -->
+        <div class="section" id="sec-04">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--purple)">04</span>
+                <div class="section__title-wrap">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Your Bio</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#9F6ACD"/></svg>
+                  </div>
+                  <p class="section__sub">Tell the world who you are.</p>
+                </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/your-bio-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+
+          <p class="section__instructions">
+            Tell us about yourself, your interests, and what drives your creativity.
+            <strong>Minimum 30 characters. Maximum 600 characters.</strong>
+          </p>
+
+
+          <div class="field">
+            <label class="label" for="bio">Bio <span class="req">*</span></label>
+            <textarea class="input textarea" id="bio" name="bio" rows="5"
+              placeholder="Write 2–4 sentences about yourself - your role at 24fps, what you work on, and what drives your creative practice."
+              required></textarea>
+            <div class="bio-footer">
+              <span class="err" id="err-bio"></span>
+              <span class="char-count"><span id="bio-count">0</span> / 600</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 05: CONTACT & PORTFOLIO ══ -->
+        <div class="section" id="sec-05">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--pink)">05</span>
+                <div class="section__title-wrap">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Contact &amp; Portfolio</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#E9295D"/></svg>
+                  </div>
+                  <p class="section__sub">How can people reach you?</p>
+                </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/contact-portfolio-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+          <div class="fields fields--2">
+            <div class="field">
+              <label class="label" for="email">Email Address <span class="req">*</span></label>
+              <input class="input" id="email" name="email" type="email"
+                     placeholder="e.g. you@example.com" autocomplete="email" required />
+              <span class="err" id="err-email"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="portfolio">Portfolio URL <span class="opt">optional</span></label>
+              <input class="input" id="portfolio" name="portfolio" type="url"
+                     placeholder="e.g. https://yourportfolio.com" />
+              <span class="err" id="err-portfolio"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 06: SOCIAL LINKS ══ -->
+        <div class="section" id="sec-06">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--teal)">06</span>
+              <div class="section__title-wrap">
+                <div class="section__title-row">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Social Links</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#3FD3D5"/></svg>
+                  </div>
+                  <span class="opt-badge">optional</span>
+                </div>
+                <p class="section__sub">Add your social or professional links.</p>
+              </div>
+            </div>
+            <div class="section__icon-bg">
+              <img src="/images/social-links-icon.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+
+          <p class="section__instructions">
+            Select a platform and paste your full profile URL. Click <strong>Add Link</strong> to add more.
+          </p>
+
+          <div class="socials-builder" id="socials-builder"></div>
+
+          <button type="button" class="add-social-btn" id="add-social-btn">
+            <svg viewBox="0 0 16 16" fill="none">
+              <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Add Link
+          </button>
+
+          <input type="hidden" id="socials-hidden" name="socials" value="{}" />
+        </div>
+
+        <!-- ══ SECTION 07: PHOTO ══ -->
+        <div class="section" id="sec-07">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--yellow)">07</span>
+              <div class="section__title-wrap">
+                <div class="section__title-row">
+                  <div class="section__title-underline-wrap">
+                    <h2 class="section__title">Photo</h2>
+                    <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#FEC843"/></svg>
+                  </div>
+                  <span class="opt-badge">optional</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="photo-layout">
+            <!-- LEFT: Upload zone -->
+            <div class="upload-col">
+              <span class="upload-spacer" aria-hidden="true"></span>
+              <div class="upload-zone" id="upload-zone">
+                <input type="file" id="photo" name="photo"
+                       accept="image/jpeg,image/png,image/webp"
+                       class="upload-input" />
+                <div class="upload-ui" id="upload-ui">
+                  <img src="/images/upload-icon.svg" class="upload-icon" alt="" aria-hidden="true" />
+                  <p class="upload-text">Drag &amp; drop your photo here<br/>or click to browse</p>
+                  <p class="upload-hint">JPG, PNG, or WEBP • Under 5MB</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- DIVIDER -->
+            <div class="photo-divider-v" aria-hidden="true"></div>
+
+            <!-- MIDDLE: Preview card -->
+            <div class="photo-preview-col">
+              <span class="preview-label">PREVIEW</span>
+              <div class="photo-preview-card" id="photo-preview-card">
+                <img src="/images/profile-avatar.svg" id="avatar-preview-img" alt="Avatar preview" />
+              </div>
+            </div>
+
+            <!-- RIGHT: No-photo note -->
+            <div class="no-photo-note">
+              <p class="no-photo-text">
+                <strong>No photo? No worries!</strong><br/>
+                We'll create a custom illustrated avatar for you.
+              </p>
+              <img src="/images/arrow-line-turned.svg" class="no-photo-deco" alt="" aria-hidden="true" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ REVIEW & SUBMIT ══ -->
+        <div class="submit-strip">
+          <p class="submit-note">
+            <svg viewBox="0 0 16 16" fill="none" width="18" height="18">
+              <circle cx="8" cy="8" r="6.5" stroke="var(--teal)" stroke-width="1.4"/>
+              <line x1="8" y1="7" x2="8" y2="11" stroke="var(--teal)" stroke-width="1.6" stroke-linecap="round"/>
+              <circle cx="8" cy="5" r="0.8" fill="var(--teal)"/>
+            </svg>
+            Please review your details before submitting. You can only submit once.
+          </p>
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
+              <path d="M3 10l14 0M10 4l6 6-6 6" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            SUBMIT PROFILE
+          </button>
+        </div>
+
+      </form>
+
+      <!-- ══ REVIEW MODAL ══ -->
+      <div class="review-overlay" id="review-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="review-title">
+        <div class="review-modal">
+          <h2 class="review-title" id="review-title">
+            <img src="/images/clapper-board-icon.svg" alt="" aria-hidden="true" />
+            Review Your Profile
+          </h2>
+          <p class="review-sub">Check everything looks right before we send it.</p>
+
+          <div class="review-body" id="review-body"></div>
+
+          <div class="review-actions">
+            <button type="button" class="btn-edit" id="btn-edit">
+              ← Go Back &amp; Edit
+            </button>
+            <button type="button" class="btn-confirm" id="btn-confirm">
+              Confirm &amp; Submit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SUCCESS STATE ══ -->
+      <div class="success-state" id="success-state" style="display:none">
+        <img src="/images/three-sparks.svg" class="success-sparks" alt="" aria-hidden="true" />
+        <div class="success-check">
+          <svg viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="28" stroke="var(--pink)" stroke-width="2.2"/>
+            <path d="M18 30L26 38L42 22" stroke="var(--pink)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Profile Submitted!</h2>
+        <p class="success-text">
+          Your profile is now under review by the team. Once approved, it will
+          go live on the 24fps website. Keep creating.
+        </p>
+        <div class="success-badge">DECODE · CREATE · INSPIRE</div>
+      </div>
+
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+      <img src="/images/24fps-footer-logo.svg" alt="24fps Decode Animation Lab" class="footer-logo" />
+    </footer>
+
+  </main>
+
+</body>
+</html>
+
+<!-- ══════════════════════════════════════════
+     STYLES
+══════════════════════════════════════════ -->
+<style is:global>
+  /* ── RESET & ROOT ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink:   #E9295D;
+    --teal:   #3FD3D5;
+    --yellow: #FEC843;
+    --purple: #9F6ACD;
+    --black:  #1A1A1A;
+    --white:  #FFFFFF;
+    --off:    #F8F5F5;
+    --muted:  #6B7280;
+    --border: rgba(26,26,26,0.12);
+
+    /* tag cycling colors */
+    --tag0: var(--pink);
+    --tag1: var(--teal);
+    --tag2: var(--yellow);
+    --tag3: var(--purple);
+  }
+
+  body {
+    font-family: 'Raleway', sans-serif;
+    background: var(--off);
+    color: var(--black);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── PAGE ── */
+  .page { min-height: 100vh; position: relative; }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 64px 24px 72px;
+    background: transparent;
+    text-align: center;
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hero__logo {
+    display: inline-block;
+    margin-bottom: 24px;
+  }
+  .hero__logo img { height: 100px; width: auto; display: block; margin: 0 auto; }
+
+  .hero__title {
+    font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--black);
+    margin-bottom: 16px;
+  }
+  .hero__title--pink { color: var(--pink); }
+
+  .hero__sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── DECORATIVE SCRIBBLES – positioned on .page ── */
+  .deco {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .deco--crown    { width: 90px;  top: 24px;   left: 4%; }
+  .deco--film     { width: 400px; top: 0;      right: 0; opacity: 1; }
+  .deco--star1    { width: 52px;  top: 140px;  left: 8%; }
+  .deco--star2    { width: 56px;  top: 20px;   right: 18%; }
+  .deco--cross1   { width: 36px;  top: 340px;  left: 6%; }
+  .deco--cross2   { width: 38px;  top: 360px;  right: 8%; }
+  .deco--line     { width: 80px;  top: 300px;  right: 16%; }
+  .deco--arrow    { width: 56px;  top: 70px;   left: 22%; }
+  .deco--starline { width: 60px;  top: 60px;   right: 24%; }
+  .deco--sparks   { display: none; }
+
+  /* ── SPARKS – sits inline to the right of "SUBMISSION FORM" ── */
+  .hero__title-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .sparks-inline {
+    position: absolute;
+    width: 32px;
+    right: -70px;
+    bottom: 50px;
+  }
+
+  /* ── FORM WRAPPER ── */
+  .form-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  /* ── SECTION CARD BASE ── */
+  .section {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 36px 40px;
+    margin-top: 20px;
+    position: relative;
+    overflow: visible; /* Keeps dropdown content from being clipped */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    animation: sectionIn 0.45s ease both;
+    transition: box-shadow 0.4s ease;
+  }
+
+  /* ── PERMANENT DESCENDING LAYER STACK ── */
+  /* This forces higher sections to always paint on top of lower sections */
+  .section:nth-of-type(1) { z-index: 7; }
+  .section:nth-of-type(2) { z-index: 6; }
+  .section:nth-of-type(3) { z-index: 5; }
+  .section:nth-of-type(4) { z-index: 4; }
+  .section:nth-of-type(5) { z-index: 3; }
+  .section:nth-of-type(6) { z-index: 2; } /* Your socials block */
+  .section:nth-of-type(7) { z-index: 1; } /* Elements below socials */
+
+  /* Dynamically elevates whichever card you are currently interacting with */
+  .section:focus-within {
+    z-index: 10;
+  }
+
+  /* Borders always visible, no glow at rest */
+  #sec-01, #sec-05 { border: 1.5px solid rgba(233,41,93,0.18); }
+  #sec-02, #sec-06 { border: 1.5px solid rgba(63,211,213,0.18); }
+  #sec-03, #sec-07 { border: 1.5px solid rgba(254,200,67,0.25); }
+  #sec-04          { border: 1.5px solid rgba(159,106,205,0.18); }
+
+  /* Glow transitions in when card is active */
+  #sec-01:focus-within, #sec-05:focus-within { box-shadow: 0 4px 32px rgba(233,41,93,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-02:focus-within, #sec-06:focus-within { box-shadow: 0 4px 32px rgba(63,211,213,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-03:focus-within, #sec-07:focus-within { box-shadow: 0 4px 32px rgba(254,200,67,0.28), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-04:focus-within                        { box-shadow: 0 4px 32px rgba(159,106,205,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+
+  @keyframes sectionIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION HEADER ── */
+  .section__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  /* Left side: number + title stacked */
+  .section__head-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+  }
+
+  /* Number badge – circle like the reference */
+  .section__num {
+    flex-shrink: 0;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--clr, var(--pink));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: #fff;
+  }
+
+  /* Big decorative icon – top-right of the card */
+  .section__icon-bg {
+    flex-shrink: 0;
+    width: 100px; height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -8px;
+  }
+  .section__icon-bg img {
+    width: 100px; height: 100px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.08));
+  }
+
+  /* ── SVG underline under section title ── */
+  .section__title-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .section__title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--black);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
+  }
+
+  /* Wraps just the h2 + SVG so underline only spans the title text, not the opt-badge */
+  .section__title-underline-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    width: fit-content; /* This breaks the flex stretch and snaps the line to the text width */
+  }
+
+  .section__title-underline {
+    display: block;
+    width: 100%;
+    height: 5px;
+    margin-top: -2px;
+    flex-shrink: 0;
+  }
+
+  /* Colour the underline SVG fill per section */
+  #sec-01 .section__title-underline path,
+  #sec-05 .section__title-underline path { fill: var(--pink); }
+  #sec-02 .section__title-underline path,
+  #sec-06 .section__title-underline path { fill: var(--teal); }
+  #sec-03 .section__title-underline path,
+  #sec-07 .section__title-underline path { fill: var(--yellow); }
+  #sec-04 .section__title-underline path { fill: var(--purple); }
+
+  .section__sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Title row: title + opt-badge side by side, underline only under title */
+  .section__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section__instructions {
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    background: color-mix(in srgb, var(--sec-clr, var(--pink)) 14%, transparent);
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+  .section__instructions strong { color: var(--black); }
+  kbd {
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.8em;
+    font-weight: 700;
+  }
+
+  /* ── FIELD GRID ── */
+  .fields { display: grid; gap: 16px; }
+  .fields--2 { grid-template-columns: 1fr 1fr; }
+  .fields--3 { grid-template-columns: 1fr 1fr 1fr; }
+  /* Identity: name takes ~2/3, initials ~1/3 on row 1; nickname spans full on row 2 */
+  .fields--identity { grid-template-columns: 2fr 1fr; }
+  .field--full { grid-column: 1 / -1; }
+  .field--nickname { grid-column: 1 / 2; } /* same width as the name field above */
+
+  /* ── FIELD ── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--black);
+  }
+  .req { color: var(--pink); font-size: 1rem; font-weight: 800; }
+  .opt {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    margin-left: 4px;
+  }
+
+  /* ── INPUTS ── */
+  .input {
+    width: 100%;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--black);
+    background: var(--off);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    appearance: none;
+  }
+  .input:focus {
+    border-color: var(--sec-clr, var(--pink));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-clr, var(--pink)) 15%, transparent);
+    background: var(--white);
+  }
+  .input.is-error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+  }
+
+  /* Per-section active color token */
+  #sec-01, #sec-05 { --sec-clr: var(--pink); }
+  #sec-02, #sec-06 { --sec-clr: var(--teal); }
+  #sec-03, #sec-07 { --sec-clr: var(--yellow); }
+  #sec-04          { --sec-clr: var(--purple); }
+
+  .textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.6;
+  }
+
+  /* ── CATEGORY CUSTOM DROPDOWN ── */
+  .category-dd-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .category-dd-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .category-dd-trigger.has-value { color: var(--black); }
+  .category-dd-trigger:hover,
+  .category-dd-trigger.is-open { border-color: var(--teal); background: var(--white); }
+  .category-dd-trigger:focus { outline: none; }
+
+  .category-dd-label { flex: 1; }
+
+  .category-dd-caret {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+  .category-dd-trigger.is-open .category-dd-caret { transform: rotate(180deg); }
+
+  .category-dd-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid rgba(63,211,213,0.35);
+    border-radius: 13px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    z-index: 100;
+    list-style: none;
+    padding: 6px;
+    overflow: hidden;
+  }
+
+  .category-dd-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--black);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .category-dd-item:hover { background: rgba(63,211,213,0.1); }
+  .category-dd-item.is-selected {
+    background: rgba(63,211,213,0.14);
+    color: var(--black);
+  }
+
+  .hint {
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .err {
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #ef4444;
+    display: block;
+  }
+  .err:empty { display: none; }
+
+  /* ── TAG INPUT ── */
+  .tag-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .tag-input-row {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    background: var(--off);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 5px 5px 5px 0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tag-input-row:focus-within {
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 3px rgba(254,200,67,0.15);
+    background: var(--white);
+  }
+
+  .tag-input {
+    flex: 1;
+    background: transparent;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+  }
+  .tag-input:focus {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .add-tag-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--yellow);
+    color: var(--white);
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+  }
+  .add-tag-btn:hover {
+    box-shadow: 0 0 0 3px rgba(254,200,67,0.35), 0 2px 10px rgba(254,200,67,0.45);
+  }
+  .add-tag-btn:active {
+    box-shadow: 0 0 0 4px rgba(254,200,67,0.45), 0 2px 14px rgba(254,200,67,0.55);
+  }
+  .add-tag-btn svg { width: 14px; height: 14px; stroke: var(--white); }
+
+  .tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 0;
+  }
+
+  /* Tags — solid pastel pills matching reference image */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 16px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border: none;
+    animation: tagPop 0.22s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes tagPop {
+    from { transform: scale(0.6); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .tag[data-ci="0"] { background: #FFCCD9; color: #C41E4A; }
+  .tag[data-ci="1"] { background: #C4F2F2; color: #0A7E80; }
+  .tag[data-ci="2"] { background: #FFF0B3; color: #8A6000; }
+  .tag[data-ci="3"] { background: #E8D5F5; color: #6A35A8; }
+
+  .tag-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    opacity: 0.75;
+    transition: opacity 0.15s, background 0.15s;
+    color: inherit;
+    flex-shrink: 0;
+    font-style: normal;
+  }
+  .tag-remove:hover { opacity: 1; background: rgba(0,0,0,0.1); }
+  .tag-remove svg { width: 11px; height: 11px; stroke-width: 2; }
+
+  /* ── BIO EXTRAS ── */
+  .bio-extract-row {
+    margin-bottom: 16px;
+  }
+
+  .bio-file-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .bio-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--off);
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .bio-file-label:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+  .bio-file-label svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .bio-file-input { display: none; }
+
+  .bio-file-note {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--teal);
+  }
+
+  .bio-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .char-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .char-count.over { color: #ef4444; }
+
+  /* ── OPTIONAL BADGE CLEANUP ── */
+  .opt-badge {
+    font-size: 0.72rem;
+    font-weight: 900;          /* Reduced boldness from heavy to semi-bold */
+    letter-spacing: normal;    /* Removes the squeeze, resets to default tracking */
+    color: var(--black);       /* Keeps the color pure black */
+    background: none;
+    border: none;
+    padding: 0;
+    text-transform: uppercase;
+    display: inline-block;
+    width: fit-content;
+    margin-left: 4px;
+    vertical-align: baseline;
+  }
+
+  /* Resets the tracking for the parentheses back to normal */
+  .opt-badge::before { 
+    content: '('; 
+    margin-right: 0;
+  }
+  .opt-badge::after { 
+    content: ')'; 
+    margin-left: 0;
+  }
+
+  /* ── SOCIALS BUILDER ── */
+  .socials-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .social-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 40px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* ── CUSTOM SOCIAL DROPDOWN ── */
+  .social-select-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .social-dropdown {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--black);
+    background: var(--off);
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    padding: 9px 12px;
+    cursor: pointer;
+    outline: none;
+    text-align: left;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .social-dropdown:hover,
+  .social-dropdown.is-open { border-color: var(--teal); background: var(--white); }
+
+  .social-dd-icon {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--teal);
+  }
+  .social-dd-icon svg { width: 18px; height: 18px; }
+
+  .social-dd-label { flex: 1; }
+
+  .social-dd-caret {
+    width: 14px; height: 14px;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .social-dd-caret svg { width: 14px; height: 14px; }
+  .social-dropdown.is-open .social-dd-caret { transform: rotate(180deg); }
+
+  .social-dd-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid rgba(63,211,213,0.35);
+    border-radius: 13px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+    z-index: 100;
+    list-style: none;
+    padding: 6px;
+    overflow-y: visible;
+  }
+
+  .social-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--black);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .social-dd-item:hover { background: rgba(63,211,213,0.1); color: var(--black); }
+  .social-dd-item.is-selected {
+    background: rgba(63,211,213,0.14);
+    color: var(--black);
+  }
+  .social-dd-item.is-selected .social-dd-item-icon { color: var(--teal); }
+
+  .social-dd-item-icon {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.15s;
+  }
+  .social-dd-item-icon svg { width: 18px; height: 18px; }
+  .social-dd-item:hover .social-dd-item-icon { color: var(--teal); }
+
+  .social-url {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--black);
+    background: var(--off);
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    padding: 10px 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .social-url:focus {
+    border-color: var(--teal);
+    background: var(--white);
+  }
+
+  .social-remove {
+    width: 36px; height: 36px;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--teal);
+    flex-shrink: 0;
+    transition: opacity 0.2s, color 0.2s, transform 0.2s;
+  }
+  .social-remove:hover {
+    color: var(--teal);
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  .social-remove svg { width: 22px; height: 22px; }
+
+  .add-social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1.5px dashed rgba(63,211,213,0.5);
+    color: var(--teal);
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 10px 20px;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .add-social-btn:hover {
+    background: rgba(63,211,213,0.06);
+    border-color: var(--teal);
+  }
+  .add-social-btn svg { width: 14px; height: 14px; }
+
+  /* ── PHOTO UPLOAD ── */
+  .photo-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1px 1fr 1fr;
+    gap: 0 24px;
+    align-items: start;
+    margin-top: 16px;
+  }
+
+  .upload-zone {
+    position: relative;
+    border: 2px dashed rgba(26,26,26,0.15);
+    border-radius: 16px;
+    background: transparent;
+    transition: border-color 0.2s, background 0.2s;
+    overflow: hidden;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upload-zone:hover { border-color: rgba(26,26,26,0.3); }
+  .upload-zone.dragover {
+    border-color: var(--yellow);
+    background: rgba(254,200,67,0.04);
+  }
+  .upload-input {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .upload-ui {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    pointer-events: none;
+  }
+  .upload-icon { width: 44px; height: 44px; }
+  .upload-text {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--black);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .upload-hint {
+    font-size: 0.73rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  /* Upload col wrapper — spacer matches PREVIEW label so image bottoms align */
+  .upload-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .upload-spacer {
+    display: block;
+    height: 0.62rem; /* matches preview-label font-size line height */
+    line-height: 1;
+    visibility: hidden;
+  }
+
+  /* Middle col: label sits on top, image below — top-aligned with upload zone */
+  .photo-preview-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .preview-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding-left: 2px;
+  }
+  .photo-preview-card {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
+    background: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-preview-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  /* Vertical divider between upload and preview */
+  .photo-divider-v {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+    margin-top: 22px; /* below PREVIEW label height */
+  }
+
+  /* Right col: no-photo note top-aligned */
+  .no-photo-note {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 4px;
+    padding-top: 22px;
+  }
+  .no-photo-deco { width: 72px; height: auto; }
+  .no-photo-text {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .no-photo-text strong {
+    color: var(--yellow);
+    font-weight: 800;
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.86rem;
+  }
+
+
+  /* ── SUBMIT STRIP ── */
+  .submit-strip {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 32px 40px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  .submit-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    max-width: 280px;
+    line-height: 1.5;
+  }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--pink);
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(233,41,93,0.4);
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  }
+  .submit-btn:hover {
+    background: #d4234f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(233,41,93,0.5);
+  }
+  .submit-btn:disabled {
+    opacity: 0.55; cursor: not-allowed; transform: none;
+  }
+
+  /* ── REVIEW MODAL ── */
+  .review-overlay {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(26,26,26,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  .review-modal {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 40px;
+    max-width: 680px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlide 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  @keyframes modalSlide {
+    from { transform: translateY(24px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .review-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--black);
+    margin-bottom: 8px;
+  }
+  .review-title img { width: 36px; height: 36px; }
+
+  .review-sub {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .review-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .review-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-row:last-child { border-bottom: none; }
+
+  .review-key {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+  .review-val {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--black);
+    line-height: 1.55;
+    word-break: break-word;
+  }
+  .review-val .tag {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+  }
+
+  .review-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .btn-edit {
+    background: none;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 13px 24px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-edit:hover { border-color: var(--pink); color: var(--pink); }
+
+  .btn-confirm {
+    background: var(--pink);
+    border: none;
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.84rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 13px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(233,41,93,0.35);
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-confirm:hover {
+    background: #d4234f;
+    transform: translateY(-1px);
+  }
+  .btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  /* ── SUCCESS STATE ── */
+  .success-state {
+    text-align: center;
+    padding: 80px 40px;
+    background: var(--white);
+    border-radius: 28px;
+    margin-top: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    position: relative;
+  }
+  .success-sparks {
+    position: absolute;
+    top: 24px; right: 24px;
+    width: 48px;
+    opacity: 0.7;
+  }
+  .success-check {
+    width: 72px; height: 72px;
+    margin: 0 auto 20px;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .success-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--black);
+    margin-bottom: 12px;
+  }
+  .success-text {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 400px;
+    margin: 0 auto 24px;
+  }
+  .success-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: var(--pink);
+    background: rgba(233,41,93,0.07);
+    border: 1.5px solid rgba(233,41,93,0.2);
+    padding: 8px 20px;
+    border-radius: 999px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .hero { padding: 48px 20px 56px; }
+    .section { padding: 28px 22px; }
+    .fields--2, .fields--3 { grid-template-columns: 1fr; }
+    .fields--identity { grid-template-columns: 2fr 1fr; gap: 12px; }
+    .field--nickname { grid-column: 1 / 2; margin-top: 0; }
+    .field--full { grid-column: 1; }
+    .social-row { grid-template-columns: 1fr 40px; }
+    .social-select-wrap { grid-column: 1 / -1; }
+    .social-url { grid-column: 1; }
+    .social-remove { grid-column: 2; grid-row: 2; }
+    .submit-strip { flex-direction: column; align-items: stretch; padding: 24px 22px; }
+    .submit-btn { justify-content: center; width: 100%; }
+    .review-modal { padding: 28px 22px; }
+    .review-row { grid-template-columns: 1fr; gap: 4px; }
+    .review-actions { flex-direction: column-reverse; }
+    .btn-edit, .btn-confirm { width: 100%; text-align: center; justify-content: center; }
+    /* hide smaller decos on mobile */
+    .deco--crown, .deco--film, .deco--arrow, .deco--starline { display: none; }
+    /* shrink section icons so they don't overflow/crop on small cards */
+    .section__icon-bg {
+      width: 60px; height: 60px;
+      margin-top: 0;
+    }
+    .section__icon-bg img {
+      width: 60px; height: 60px;
+    }
+    /* photo section on mobile */
+    .photo-avatar-wrap { width: 68px; height: 68px; }
+    .photo-layout { grid-template-columns: 1fr; }
+    .photo-divider-v { display: none; }
+    .photo-preview-col {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .photo-preview-col .preview-label {
+      order: -1;
+      font-size: 0.72rem;
+    }
+    .photo-preview-card {
+      width: 100%;
+      max-width: 100%;
+    }
+    .no-photo-note { flex-direction: row; align-items: flex-start; padding-left: 0; }
+  }
+  /* ── FOOTER ── */
+  .site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px 40px;
+    margin-top: 8px;
+  }
+  .footer-logo {
+    height: 72px;
+    width: auto;
+    transition: opacity 0.2s;
+    display: block;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .hero { padding: 48px 20px 56px; }
+
+    /* Fix: Scale sparks and pull them closer to the shrinking text */
+    .sparks-inline {
+      width: 22px;
+      right: -36px;
+      bottom: 35px;
+    }
+
+    .section { padding: 28px 22px; }
+    .fields--2, .fields--3 { grid-template-columns: 1fr; }
+    /* ... the rest of your existing mobile styles ... */
+  }
+
+  @media (max-width: 680px) {
+    .site-footer { padding: 40px 24px 32px; }
+    .footer-logo { height: 42px; }
+  }
+</style>
+
+<!-- ══════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════ -->
+<script>
+  /* ── CONFIG ── */
+  const SUPABASE_URL  = import.meta.env.PUBLIC_SUPABASE_URL;
+  const SUPABASE_ANON = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  const PLATFORMS = [
+    { value: 'instagram',  label: 'Instagram',  placeholder: 'https://instagram.com/username',
+      icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>` },
+    { value: 'tiktok',     label: 'TikTok',     placeholder: 'https://tiktok.com/@username',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>` },
+    { value: 'linkedin',   label: 'LinkedIn',   placeholder: 'https://linkedin.com/in/username',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>` },
+    { value: 'behance',    label: 'Behance',    placeholder: 'https://behance.net/username',
+      icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.5 19C1.67157 19 1 18.3284 1 17.5V6.5C1 5.67157 1.67157 5 2.5 5H8C13 5 13 11.5 10 11.5C13 11.5 14 19 8 19H2.5ZM4.5 11C4.22386 11 4 10.7761 4 10.5V7.5C4 7.22386 4.22386 7 4.5 7H7C7 7 9 7 9 9C9 11 7 11 7 11H4.5ZM4.5 13C4.22386 13 4 13.2239 4 13.5V16.5C4 16.7761 4.22386 17 4.5 17H8C8 17 9.5 17 9.5 15C9.5 13 8 13 8 13H4.5Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M21.499 14.0034C22.3279 14.0034 23.0212 13.3199 22.8522 12.5085C21.6065 6.52886 12.9128 7.08088 13 14.0034C13.0665 19.2762 20.4344 20.9671 22.6038 16.1898C22.9485 15.4308 22.1747 14.9997 21.5372 14.9997C20.9706 14.9997 20.5313 15.5223 20.1693 15.9582C19.1272 17.2132 15.9628 17.1221 15.5449 14.5142C15.5005 14.2375 15.7304 14.0034 16.0106 14.0034H21.499ZM15.8184 11.9997C15.671 11.9997 15.5758 11.8453 15.6545 11.7207C16.7141 10.0424 19.2614 10.0605 20.3398 11.7189C20.4207 11.8434 20.3257 11.9997 20.1772 11.9997H15.8184Z" fill="currentColor"/><path d="M16 6C15.4477 6 15 6.44772 15 7C15 7.55228 15.4477 8 16 8H20C20.5523 8 21 7.55228 21 7C21 6.44772 20.5523 6 20 6H16Z" fill="currentColor"/></svg>` },
+    { value: 'dribbble',   label: 'Dribbble',   placeholder: 'https://dribbble.com/username',
+      icon: `<svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M25.916 7.921c-1.881 2.234-4.289 3.965-7.035 5.009l-0.118 0.039c0.3 0.612 0.587 1.231 0.85 1.857 0.1 0.225 0.187 0.45 0.275 0.662 0.927-0.102 2.003-0.16 3.092-0.16 2.063 0 4.077 0.208 6.023 0.605l-0.193-0.033c-0.020-3.040-1.107-5.821-2.904-7.994l0.017 0.021zM13.001 3.569c1.595 2.15 3.176 4.6 4.598 7.151l0.178 0.347c2.712-0.908 4.989-2.511 6.694-4.6l0.021-0.026c-2.247-2.006-5.228-3.232-8.494-3.232-1.063 0-2.096 0.13-3.084 0.375l0.088-0.018zM3.46 13.395c4.219-0.022 8.295-0.59 12.176-1.636l-0.333 0.076c-1.652-2.899-3.222-5.318-4.912-7.644l0.163 0.236c-3.596 1.721-6.227 4.966-7.077 8.875l-0.015 0.085zM6.484 24.585c2.42-3.882 6.010-6.839 10.271-8.408l0.141-0.045c0.169-0.056 0.337-0.105 0.506-0.15-0.325-0.731-0.675-1.458-1.040-2.174-3.888 1.154-8.355 1.819-12.977 1.819-0.066 0-0.131-0-0.196-0l0.010 0-0.005 0.39c0 0.003 0 0.006 0 0.009 0 3.297 1.25 6.302 3.301 8.568l-0.010-0.011zM21.005 27.809c-0.682-3.699-1.63-6.957-2.863-10.070l0.126 0.361-0.082 0.025c-4.314 1.346-7.826 4.192-10.002 7.915l-0.045 0.083c2.145 1.688 4.885 2.707 7.863 2.707 1.805 0 3.522-0.374 5.078-1.049l-0.083 0.032zM28.646 18.052c-1.571-0.474-3.376-0.747-5.245-0.747-0.964 0-1.911 0.073-2.836 0.213l0.104-0.013c0.98 2.564 1.842 5.629 2.436 8.789l0.054 0.344c2.874-1.96 4.893-4.993 5.482-8.51l0.010-0.075zM16 30.996c0 0 0 0-0 0-8.282 0-14.996-6.714-14.996-14.996s6.714-14.996 14.996-14.996c8.282 0 14.996 6.714 14.996 14.996 0 0 0 0 0 0v0c-0.011 8.277-6.718 14.984-14.995 14.996h-0.001z"/></svg>` },
+    { value: 'artstation', label: 'ArtStation', placeholder: 'https://artstation.com/username',
+      icon: `<svg viewBox="0 0 32 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M0 23.63l2.703 4.672c0.552 1.094 1.667 1.781 2.885 1.781h17.943l-3.724-6.453zM32 23.661c0-0.641-0.193-1.245-0.516-1.75l-10.516-18.276c-0.557-1.057-1.656-1.719-2.854-1.719h-5.557l16.24 28.135 2.563-4.432c0.5-0.849 0.641-1.224 0.641-1.958zM17.161 19.047l-7.255-12.568-7.26 12.568z"/></svg>` },
+    { value: 'youtube',    label: 'YouTube',    placeholder: 'https://youtube.com/@username',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>` },
+    { value: 'vimeo',      label: 'Vimeo',      placeholder: 'https://vimeo.com/username',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M23.977 6.416c-.105 2.338-1.739 5.543-4.894 9.609-3.268 4.247-6.026 6.37-8.29 6.37-1.409 0-2.578-1.294-3.553-3.881L5.322 11.4C4.603 8.816 3.834 7.522 3.01 7.522c-.179 0-.806.378-1.881 1.132L0 7.197a315.065 315.065 0 0 0 3.708-3.304C5.139 2.601 6.205 1.83 6.903 1.766c1.765-.17 2.844 1.034 3.237 3.614.435 2.755.737 4.473.905 5.152.502 2.282 1.056 3.402 1.658 3.402.468 0 1.172-.741 2.115-2.224.937-1.482 1.44-2.609 1.503-3.385.134-1.278-.37-1.92-1.503-1.92-.535 0-1.088.124-1.658.367 1.102-3.61 3.21-5.364 6.331-5.276 2.307.063 3.396 1.564 3.286 4.52z"/></svg>` },
+    { value: 'twitter',    label: 'X / Twitter', placeholder: 'https://x.com/username',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>` },
+    { value: 'github',     label: 'GitHub',     placeholder: 'https://github.com/username',
+      icon: `<svg viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10,1 C5.02943725,1 1,5.02943725 1,10 C1,13.9901613 3.53501565,17.3729659 7.08016444,18.5819604 C7.53015965,18.6625125 7.69530384,18.3874271 7.69530384,18.1497321 C7.69530384,17.9353681 7.68773694,17.2846083 7.68354231,16.4235982 C5.1668598,16.9653342 4.63451437,15.2029741 4.63451437,15.2029741 C4.22648283,14.1463867 3.63399171,13.8725392 3.63399171,13.8725392 C2.82276757,13.3162912 3.69398614,13.3274322 3.69398614,13.3274322 C4.58895338,13.390152 5.05942099,14.2481642 5.05942099,14.2481642 C5.85545756,15.6354614 7.1977897,15.2338846 7.71215806,15.0027587 C7.79195468,14.4238518 8.02394851,14.0234149 8.27929319,13.7966499 C6.24521527,13.5677451 4.10539261,12.7916316 4.10539261,9.2119636 C4.10539261,8.21475236 4.45484638,7.39837212 5.07740601,6.75741994 C4.98518651,6.52814949 4.67828463,5.59721742 5.16567258,4.33487269 C5.16567258,4.33487269 5.91459737,4.0910705 7.67384397,5.27697586 C8.44573028,5.07493152 9.22571954,4.97277265 10,4.96913414 C10.7742805,4.97277265 11.5542697,5.07493152 12.327396,5.27697586 C14.0854026,4.0910705 14.8331875,4.33487269 14.8331875,4.33487269 C15.3217154,5.59721742 15.0148135,6.52814949 14.922594,6.75741994 C15.5463935,7.39837212 15.8929672,8.21475236 15.8929672,9.2119636 C15.8929672,12.8008727 13.7494644,13.5647053 11.7086054,13.7893306 C12.0290973,14.069187 12.3154896,14.6230463 12.3154896,15.4672194 C12.3154896,16.6711154 12.304729,17.6453813 12.304729,17.9417131 C12.304729,18.1812879 12.4667932,18.4587731 12.9231099,18.3699327 C16.4673932,17.1576508 19,13.7773799 19,10 C19,5.02943725 14.9705627,1 10,1 Z"/></svg>` },
+    { value: 'others',     label: 'Others',     placeholder: 'https://yoursite.com',
+      icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 2a14.5 14.5 0 0 1 0 20M12 2a14.5 14.5 0 0 0 0 20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>` },
+  ];
+
+  /* ── STATE ── */
+  let tags = [];
+  let tagColorIndex = 0;
+  const TAG_COLORS = 4;
+
+  /* ── ELEMENTS ── */
+  const form         = document.getElementById('member-form');
+  const submitBtn    = document.getElementById('submit-btn');
+  const overlay      = document.getElementById('review-overlay');
+  const reviewBody   = document.getElementById('review-body');
+  const btnEdit      = document.getElementById('btn-edit');
+  const btnConfirm   = document.getElementById('btn-confirm');
+  const successState = document.getElementById('success-state');
+
+  // FIX: Prevent "Enter" from submitting the form from text inputs
+  form.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+      e.preventDefault(); 
+    }
+  });
+
+  /* ────────────────────────────────────────
+     BIO CHARACTER COUNTER
+  ──────────────────────────────────────── */
+  const bioTa    = document.getElementById('bio');
+  const bioCount = document.getElementById('bio-count');
+  const charCount = document.querySelector('.char-count');
+  bioTa.addEventListener('input', () => {
+    const len = bioTa.value.length;
+    if (len > 600) bioTa.value = bioTa.value.slice(0, 600);
+    bioCount.textContent = Math.min(len, 600);
+    charCount.classList.toggle('over', len > 580);
+  });
+
+  /* ────────────────────────────────────────
+     BIO FILE EXTRACTION
+  ──────────────────────────────────────── */
+  const bioFileInput = document.getElementById('bio-file');
+  const bioFileName  = document.getElementById('bio-file-name');
+  const bioFileNote  = document.getElementById('bio-file-note');
+
+  if (bioFileInput) {
+      bioFileInput.addEventListener('change', async () => {
+      const file = bioFileInput.files[0];
+      if (!file) return;
+      bioFileName.textContent = file.name;
+      bioFileNote.textContent = 'Extracting text…';
+
+      try {
+        let text = '';
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'txt' || file.type === 'text/plain') {
+          text = await file.text();
+        } else if (ext === 'docx' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+          // Basic DOCX: unzip and grab document.xml text content
+          const arrayBuffer = await file.arrayBuffer();
+          const uint8 = new Uint8Array(arrayBuffer);
+          // Try to read raw text (simple fallback - not full DOCX parse)
+          const decoder = new TextDecoder('utf-8');
+          const raw = decoder.decode(uint8);
+          const textMatch = raw.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
+          if (textMatch) {
+            text = textMatch.map(m => m.replace(/<[^>]+>/g, '')).join(' ');
+          } else {
+            text = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          }
+        } else {
+          // PDF: attempt to read as text (works for text-based PDFs)
+          const arrayBuffer = await file.arrayBuffer();
+          const decoder = new TextDecoder('latin1');
+          const raw = decoder.decode(arrayBuffer);
+          // Extract text between BT/ET markers (basic PDF text extraction)
+          const btMatches = [...raw.matchAll(/BT([\s\S]*?)ET/g)];
+          if (btMatches.length) {
+            text = btMatches.map(m => {
+              return m[1].replace(/\((.*?)\)\s*Tj/g, '$1 ')
+                        .replace(/\[(.*?)\]\s*TJ/g, (_,g) => g.replace(/\((.*?)\)/g,'$1'))
+                        .replace(/[\x00-\x1F]+/g, ' ').trim();
+            }).join(' ');
+          }
+          if (!text.trim()) text = raw.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+        }
+
+        // Clean up and trim to 600 chars
+        text = text.replace(/\s+/g, ' ').trim().slice(0, 600);
+        if (text.length > 10) {
+          bioTa.value = text;
+          bioCount.textContent = text.length;
+          charCount.classList.toggle('over', text.length > 580);
+          bioFileNote.textContent = '✓ Text extracted - review and edit as needed.';
+        } else {
+          bioFileNote.textContent = 'Could not extract text. Please type your bio manually.';
+        }
+      } catch {
+        bioFileNote.textContent = 'Extraction failed. Please type your bio manually.';
+      }
+    });
+  }
+
+  /* ────────────────────────────────────────
+     EXPERTISE TAGS
+  ──────────────────────────────────────── */
+  const tagInput  = document.getElementById('expertise-text');
+  const tagsList  = document.getElementById('tags-list');
+  const addTagBtn = document.getElementById('add-tag-btn');
+  const tagsHidden = document.getElementById('expertise-hidden');
+
+  function renderTags() {
+    tagsList.innerHTML = '';
+    tags.forEach((tag, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.dataset.ci = i % TAG_COLORS;
+      el.innerHTML = `${escapeHtml(tag)}<button type="button" class="tag-remove" data-i="${i}" aria-label="Remove ${tag}">
+        <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>`;
+      tagsList.appendChild(el);
+    });
+    tagsHidden.value = JSON.stringify(tags);
+  }
+
+  function addTag() {
+    const val = tagInput.value.trim().replace(/,$/, '');
+    if (val && !tags.includes(val)) {
+      tags.push(val);
+      renderTags();
+    }
+    tagInput.value = '';
+    tagInput.focus();
+  }
+
+  addTagBtn.addEventListener('click', addTag);
+  tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(); }
+    if (e.key === 'Backspace' && !tagInput.value && tags.length) {
+      tags.pop(); renderTags();
+    }
+  });
+  tagsList.addEventListener('click', e => {
+    const btn = e.target.closest('.tag-remove');
+    if (btn) { tags.splice(parseInt(btn.dataset.i), 1); renderTags(); }
+  });
+
+  /* ────────────────────────────────────────
+     SOCIAL LINKS BUILDER
+  ──────────────────────────────────────── */
+  const socialsBuilder = document.getElementById('socials-builder');
+  const addSocialBtn   = document.getElementById('add-social-btn');
+  const socialsHidden  = document.getElementById('socials-hidden');
+
+  function updateSocials() {
+    const obj = {};
+    socialsBuilder.querySelectorAll('.social-row').forEach(row => {
+      const p = row.dataset.platform || '';
+      const u = row.querySelector('.social-url').value.trim();
+      if (p && u) obj[p] = u;
+    });
+    socialsHidden.value = JSON.stringify(obj);
+  }
+
+  function getPlaceholder(platform) {
+    return PLATFORMS.find(p => p.value === platform)?.placeholder || 'https://…';
+  }
+
+/* Close all open custom dropdowns except the one passed in */
+  function closeAllDropdowns(except = null) {
+    document.querySelectorAll('.social-dropdown.is-open').forEach(d => {
+      if (d !== except) {
+        d.classList.remove('is-open');
+        d.setAttribute('aria-expanded', 'false');
+        // FIX: Look in the parent wrapper to find the list, not inside the button
+        const list = d.parentElement.querySelector('.social-dd-list');
+        if (list) list.style.display = 'none';
+      }
+    });
+  }
+
+  function buildCustomDropdown(selectedValue = '') {
+    const selected = PLATFORMS.find(p => p.value === selectedValue) || null;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'social-select-wrap';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'social-dropdown';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const triggerIcon = document.createElement('span');
+    triggerIcon.className = 'social-dd-icon';
+    triggerIcon.innerHTML = selected ? selected.icon : `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>`;
+
+    const triggerLabel = document.createElement('span');
+    triggerLabel.className = 'social-dd-label';
+    triggerLabel.textContent = selected ? selected.label : 'Select platform';
+
+    const caret = document.createElement('span');
+    caret.className = 'social-dd-caret';
+    caret.innerHTML = `<svg viewBox="0 0 16 16" fill="none"><path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
+    trigger.appendChild(triggerIcon);
+    trigger.appendChild(triggerLabel);
+    trigger.appendChild(caret);
+
+    const list = document.createElement('ul');
+    list.className = 'social-dd-list';
+    list.setAttribute('role', 'listbox');
+    list.style.display = 'none';
+
+    PLATFORMS.forEach(p => {
+      const item = document.createElement('li');
+      item.className = 'social-dd-item' + (p.value === selectedValue ? ' is-selected' : '');
+      item.setAttribute('role', 'option');
+      item.dataset.value = p.value;
+      item.innerHTML = `<span class="social-dd-item-icon">${p.icon}</span><span>${p.label}</span>`;
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        // Update trigger UI
+        triggerIcon.innerHTML = p.icon;
+        triggerLabel.textContent = p.label;
+        // Mark selection
+        list.querySelectorAll('.social-dd-item').forEach(i => i.classList.remove('is-selected'));
+        item.classList.add('is-selected');
+        // Store selected value on the row
+        const row = wrap.closest('.social-row');
+        row.dataset.platform = p.value;
+        // Update URL placeholder
+        const urlInput = row.querySelector('.social-url');
+        urlInput.placeholder = p.placeholder;
+        // Close and update
+        trigger.classList.remove('is-open');
+        list.style.display = 'none';
+        trigger.setAttribute('aria-expanded', 'false');
+        updateSocials();
+      });
+      list.appendChild(item);
+    });
+
+trigger.addEventListener('click', () => {
+      const isOpen = trigger.classList.contains('is-open');
+      
+      // Close all OTHER dropdowns so they don't overlap
+      closeAllDropdowns(trigger);
+
+      if (isOpen) {
+        trigger.classList.remove('is-open');
+        list.style.display = 'none';
+        trigger.setAttribute('aria-expanded', 'false');
+      } else {
+        // Otherwise, open it downwards
+        trigger.classList.add('is-open');
+        list.style.display = 'block';
+        trigger.setAttribute('aria-expanded', 'true');
+        
+        // Ensure it always resets to drop down (in case it got stuck)
+        list.style.top = 'calc(100% + 6px)';
+        list.style.bottom = 'auto';
+      }
+    });
+
+    // Close on outside click
+    document.addEventListener('click', e => {
+      if (!wrap.contains(e.target)) {
+        trigger.classList.remove('is-open');
+        list.style.display = 'none';
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    wrap.appendChild(trigger);
+    wrap.appendChild(list);
+    return wrap;
+  }
+
+  function addSocialRow(platform = '', url = '') {
+    const row = document.createElement('div');
+    row.className = 'social-row';
+    row.dataset.platform = platform;
+
+    const ddWrap = buildCustomDropdown(platform);
+
+    const urlInput = document.createElement('input');
+    urlInput.type = 'url';
+    urlInput.className = 'social-url';
+    urlInput.placeholder = getPlaceholder(platform) || 'Paste your profile URL';
+    urlInput.value = url;
+    urlInput.addEventListener('input', updateSocials);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'social-remove';
+    removeBtn.setAttribute('aria-label', 'Remove link');
+    removeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 6H21M5 6V20C5 21.1046 5.89543 22 7 22H17C18.1046 22 19 21.1046 19 20V6M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M10 11V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    removeBtn.addEventListener('click', () => { row.remove(); updateSocials(); });
+
+    row.appendChild(ddWrap);
+    row.appendChild(urlInput);
+    row.appendChild(removeBtn);
+    socialsBuilder.appendChild(row);
+  }
+
+  addSocialBtn.addEventListener('click', () => addSocialRow());
+
+  /* ────────────────────────────────────────
+     CATEGORY CUSTOM DROPDOWN
+  ──────────────────────────────────────── */
+  const categoryTrigger = document.getElementById('category-btn');
+  const categoryList    = document.getElementById('category-dd-list');
+  const categoryLabel   = document.getElementById('category-dd-label');
+  const categoryHidden  = document.getElementById('category');
+
+  categoryTrigger.addEventListener('click', () => {
+    const isOpen = categoryTrigger.classList.contains('is-open');
+    if (isOpen) {
+      categoryTrigger.classList.remove('is-open');
+      categoryList.style.display = 'none';
+      categoryTrigger.setAttribute('aria-expanded', 'false');
+    } else {
+      categoryTrigger.classList.add('is-open');
+      categoryList.style.display = 'block';
+      categoryTrigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  categoryList.querySelectorAll('.category-dd-item').forEach(item => {
+    item.addEventListener('mousedown', e => {
+      e.preventDefault();
+      const val   = item.dataset.value;
+      const label = item.textContent.trim();
+      categoryHidden.value = val;
+      categoryLabel.textContent = label;
+      categoryTrigger.classList.add('has-value');
+      categoryList.style.display = 'none';
+      categoryTrigger.classList.remove('is-open');
+      categoryTrigger.setAttribute('aria-expanded', 'false');
+      categoryList.querySelectorAll('.category-dd-item').forEach(i => i.classList.remove('is-selected'));
+      item.classList.add('is-selected');
+      categoryTrigger.classList.remove('is-error');
+      const errEl = document.getElementById('err-category');
+      if (errEl) errEl.textContent = '';
+    });
+  });
+
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('category-dd-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      categoryTrigger.classList.remove('is-open');
+      categoryList.style.display = 'none';
+      categoryTrigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* ────────────────────────────────────────
+     PHOTO UPLOAD
+  ──────────────────────────────────────── */
+  const photoInput     = document.getElementById('photo');
+  const uploadZone     = document.getElementById('upload-zone');
+  const uploadUi       = document.getElementById('upload-ui');
+  const avatarPreview  = document.getElementById('avatar-preview-img');
+
+  function showPreview(file) {
+    if (!file || file.size > 5 * 1024 * 1024) {
+      if (file) alert('Photo must be under 5MB.');
+      photoInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      avatarPreview.src = e.target.result;
+      uploadUi.querySelector('.upload-text').innerHTML = 'Photo selected ✓<br/><span style="font-weight:500;font-size:0.8em;color:var(--muted)">Click to change</span>';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  photoInput.addEventListener('change', () => showPreview(photoInput.files[0]));
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f?.type.startsWith('image/')) {
+      const dt = new DataTransfer(); dt.items.add(f); photoInput.files = dt.files;
+      showPreview(f);
+    }
+  });
+
+  /* ────────────────────────────────────────
+     VALIDATION
+  ──────────────────────────────────────── */
+  function setError(fieldId, errId, msg) {
+    const el = document.getElementById(fieldId);
+    const err = document.getElementById(errId);
+    if (msg) { el?.classList.add('is-error'); if (err) err.textContent = msg; }
+    else      { el?.classList.remove('is-error'); if (err) err.textContent = ''; }
+  }
+
+  function validate() {
+    let ok = true;
+    const v = id => (document.getElementById(id)?.value || '').trim();
+
+    if (v('full-name').length < 2) { setError('full-name','err-full-name','Please enter your full name.'); ok = false; }
+    else setError('full-name','err-full-name','');
+
+    if (v('initials').length < 2) { setError('initials','err-initials','Enter 2–3 character initials.'); ok = false; }
+    else setError('initials','err-initials','');
+
+    if (!v('category')) { setError('category-btn','err-category','Please select your status.'); ok = false; }
+    else setError('category-btn','err-category','');
+
+    if (v('role').length < 2) { setError('role','err-role','Please enter your role / title.'); ok = false; }
+    else setError('role','err-role','');
+
+    if (tags.length === 0) { document.getElementById('err-expertise').textContent = 'Add at least one skill.'; ok = false; }
+    else document.getElementById('err-expertise').textContent = '';
+
+    const bioVal = v('bio');
+    if (bioVal.length < 30)  { setError('bio','err-bio','Bio must be at least 30 characters.'); ok = false; }
+    else setError('bio','err-bio','');
+
+    const emailVal = v('email');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) { setError('email','err-email','Please enter a valid email address.'); ok = false; }
+    else setError('email','err-email','');
+
+    const portVal = v('portfolio');
+    if (portVal && !portVal.startsWith('http')) { setError('portfolio','err-portfolio','Please enter a valid URL starting with http.'); ok = false; }
+    else setError('portfolio','err-portfolio','');
+
+    return ok;
+  }
+
+  /* ────────────────────────────────────────
+     REVIEW MODAL BUILD
+  ──────────────────────────────────────── */
+  function buildReview() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+
+    const rows = [
+      { key: 'Full Name',       val: v('full-name') },
+      { key: 'Nickname',        val: v('nickname') || '-' },
+      { key: 'Initials',        val: v('initials') },
+      { key: 'Category',        val: v('category') },
+      { key: 'Program',         val: v('program') || '-' },
+      { key: 'Role / Title',    val: v('role') },
+      { key: 'Expertise',       val: '__tags__' },
+      { key: 'Bio',             val: v('bio') },
+      { key: 'Email',           val: v('email') },
+      { key: 'Portfolio',       val: v('portfolio') },
+      { key: 'Social Links',    val: '__socials__' },
+      { key: 'Photo',           val: photoInput.files[0]?.name || 'None (avatar will be created)' },
+    ];
+
+    reviewBody.innerHTML = '';
+    rows.forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'review-row';
+      let valHtml = '';
+      if (r.val === '__tags__') {
+        valHtml = tags.map((t, i) =>
+          `<span class="tag" data-ci="${i % TAG_COLORS}" style="margin:2px;">${escapeHtml(t)}</span>`
+        ).join('') || '-';
+      } else if (r.val === '__socials__') {
+        const s = JSON.parse(socialsHidden.value || '{}');
+        const entries = Object.entries(s);
+        valHtml = entries.length
+          ? entries.map(([p,u]) => `<div><strong>${p}:</strong> ${escapeHtml(u)}</div>`).join('')
+          : '-';
+      } else {
+        valHtml = escapeHtml(r.val);
+      }
+      row.innerHTML = `<span class="review-key">${r.key}</span><span class="review-val">${valHtml}</span>`;
+      reviewBody.appendChild(row);
+    });
+  }
+
+  /* ────────────────────────────────────────
+     DUPLICATE CHECK
+  ──────────────────────────────────────── */
+  async function checkDuplicate(email) {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/member_submissions?select=id&email=eq.${encodeURIComponent(email)}&status=in.(pending,approved)`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+      );
+      const data = await res.json();
+      return Array.isArray(data) && data.length > 0;
+    } catch { return false; }
+  }
+
+  /* ────────────────────────────────────────
+     PHOTO UPLOAD TO SUPABASE STORAGE
+  ──────────────────────────────────────── */
+  async function uploadPhoto(file, name) {
+    if (!file) return null;
+    const ext  = file.name.split('.').pop();
+    const path = `${Date.now()}-${name.toLowerCase().replace(/\s+/g,'-')}.${ext}`;
+    const res  = await fetch(`${SUPABASE_URL}/storage/v1/object/member-photos/${path}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': file.type },
+      body: file,
+    });
+    if (!res.ok) return null;
+    return `${SUPABASE_URL}/storage/v1/object/public/member-photos/${path}`;
+  }
+
+  /* ────────────────────────────────────────
+     FORM SUBMIT → REVIEW MODAL
+  ──────────────────────────────────────── */
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (!validate()) {
+      document.querySelector('.is-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    buildReview();
+    overlay.style.display = 'flex';
+    overlay.scrollTop = 0;
+  });
+
+  btnEdit.addEventListener('click', () => { overlay.style.display = 'none'; });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+
+  /* ────────────────────────────────────────
+     CONFIRM SUBMIT → SUPABASE
+  ──────────────────────────────────────── */
+  btnConfirm.addEventListener('click', async () => {
+    btnConfirm.disabled = true;
+    btnConfirm.textContent = 'Submitting…';
+
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const email = v('email');
+
+    // Duplicate guard
+    const isDuplicate = await checkDuplicate(email);
+    if (isDuplicate) {
+      overlay.style.display = 'none';
+      alert(`A submission with the email "${email}" already exists and is under review or approved. You can only submit once.`);
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = 'Confirm & Submit';
+      return;
+    }
+
+    try {
+      const photoUrl = await uploadPhoto(photoInput.files[0], v('full-name'));
+
+      const payload = {
+        name:       v('full-name'),
+        nickname:   v('nickname') || null,
+        initials:   v('initials'),
+        category:   v('category'),
+        program:    v('program') || null,
+        role:       v('role'),
+        expertise:  tags,
+        bio:        v('bio'),
+        email,
+        portfolio:  v('portfolio'),
+        socials:    JSON.parse(socialsHidden.value || '{}'),
+        photo_url:  photoUrl,
+        status:     'pending',
+      };
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error('Submission failed');
+
+      overlay.style.display = 'none';
+      form.style.display = 'none';
+      document.querySelector('.submit-strip').style.display = 'none';
+      successState.style.display = 'block';
+      successState.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    } catch {
+      overlay.style.display = 'none';
+      btnConfirm.disabled = false;
+      btnConfirm.textContent = 'Confirm & Submit';
+      alert('Something went wrong. Please check your connection and try again.');
+    }
+  });
+
+  /* Underline width is handled by CSS (inline-flex on .section__title-wrap). */
+
+  /* ────────────────────────────────────────
+     SYNC UPLOAD ZONE HEIGHT TO PREVIEW CARD
+  ──────────────────────────────────────── */
+  function syncUploadHeight() {
+    const card = document.getElementById('photo-preview-card');
+    const zone = document.getElementById('upload-zone');
+    if (card && zone) {
+      const h = card.offsetHeight;
+      if (h > 0) zone.style.height = h + 'px';
+    }
+  }
+  syncUploadHeight();
+  window.addEventListener('resize', syncUploadHeight);
+
+  /* ────────────────────────────────────────
+     CLEAR ERRORS ON INPUT
+  ──────────────────────────────────────── */
+  ['full-name','initials','role','bio','email','portfolio'].forEach(id => {
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(`err-${id}`);
+    el?.addEventListener('input', () => { el.classList.remove('is-error'); if (errEl) errEl.textContent = ''; });
+    el?.addEventListener('change', () => { el.classList.remove('is-error'); if (errEl) errEl.textContent = ''; });
+  });
+  tagInput.addEventListener('input', () => { document.getElementById('err-expertise').textContent = ''; });
+
+  /* ────────────────────────────────────────
+     HELPERS
+  ──────────────────────────────────────── */
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+</script>
