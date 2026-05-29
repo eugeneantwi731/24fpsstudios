@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
 
 interface Props {
   title: string;
@@ -27,5 +28,7 @@ const {
   <main>
     <slot />
   </main>
+  <Footer />
+  <script is:inline src="/click-spark.js"></script>
 </body>
 </html>
