@@ -5,7 +5,12 @@ import { fileURLToPath } from 'url';
 export default defineConfig({
   site: 'https://24fpsstudios.com',
   output: 'server',
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    imageService: 'passthrough',
+    platformProxy: {
+      enabled: false
+    }
+  }),
   vite: {
     resolve: {
       alias: {
