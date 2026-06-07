@@ -448,20 +448,51 @@
 
       <!-- ══ SUCCESS STATE ══ -->
       <div class="success-state" id="success-state" style="display:none">
-        <img src="/images/three-sparks.svg" class="success-sparks success-sparks--left" alt="" aria-hidden="true" />
-        <img src="/images/three-sparks.svg" class="success-sparks success-sparks--right" alt="" aria-hidden="true" />
-        <div class="success-check" id="success-check">
-          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle class="success-circle" cx="40" cy="40" r="36" stroke="var(--pink)" stroke-width="3" fill="none"/>
-            <path class="success-tick" d="M24 40L34 51L56 29" stroke="var(--pink)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          </svg>
+
+        <!-- Hero illustration -->
+        <div class="success-hero-img" aria-hidden="true">
+          <img src="/images/24fps-checked.png" alt="" />
         </div>
-        <h2 class="success-title">Profile Submitted!</h2>
-        <p class="success-text">
-          Your profile is now under review by the team. Once approved, it will
-          go live on the 24fps website. Keep creating.
-        </p>
-        <div class="success-badge">DECODE · CREATE · INSPIRE</div>
+
+        <!-- Card -->
+        <div class="success-card" id="success-card">
+
+          <!-- Animated checkmark sitting on top of card -->
+          <div class="success-check-wrap">
+            <svg class="success-check-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85.06 85.04" aria-hidden="true">
+              <ellipse class="success-check-bg" cx="42.53" cy="42.52" rx="42.53" ry="42.52"/>
+              <polyline
+                class="success-check-tick"
+                fill="none"
+                stroke="white"
+                stroke-width="10.63"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-miterlimit="2.61313"
+                points="20.39,42.84 34.94,57.39 64.67,27.66"
+              />
+            </svg>
+          </div>
+
+          <!-- Title -->
+          <div class="success-title-wrap">
+            <h2 class="success-title">
+              PROFILE <span class="success-title--pink">SUBMITTED!</span>
+            </h2>
+            <svg class="success-underline" viewBox="0 0 172 6" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M2 5.2c-0.9 0.08 -1.9,-1.6 0.4,-1.85 13.5,-1.32 70,-2.1 155,-1.1 0.69 0.05 5.45 0.23 5.4 0.96 -0.04 0.68 -4.46 0.41 -5.12 0.41 -6.47,-0.06 -11.2,-0.2 -17.87,-0.09 -10.25 0.19 -21.68 0.57 -31.9 1.64z" fill="#9F6ACD"/>
+            </svg>
+          </div>
+
+          <!-- Body -->
+          <p class="success-text">
+            Thank you for submitting your profile.<br />
+            Your information has been received and is now under review<br />
+            by the <span class="success-brand">24fps</span> (Decode Animation Lab) technical team. Once approved,
+            it will go live on the 24fps website. Keep creating.
+          </p>
+
+        </div>
       </div>
 
     </section>
@@ -911,26 +942,158 @@
   .btn-confirm:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .review-security-note { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.72rem; font-weight: 600; color: var(--muted); text-align: center; padding-bottom: 8px; }
 
-  .success-state { text-align: center; padding: 80px 40px; background: var(--white); border-radius: 28px; margin-top: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); position: relative; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  /* ── SUCCESS STATE ── */
+  .success-state {
+    margin-top: 0;
+    padding-top: 40px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
   .success-state.is-visible { opacity: 1; transform: translateY(0); }
-  .success-sparks--left  { position: absolute; top: 24px; left: 24px; width: 48px; opacity: 0.7; animation: sparklePop 0.6s 1.2s cubic-bezier(0.34,1.56,0.64,1) both; }
-  .success-sparks--right { position: absolute; top: 24px; right: 24px; width: 48px; opacity: 0.7; transform: scaleX(-1); animation: sparklePop 0.6s 1.3s cubic-bezier(0.34,1.56,0.64,1) both; }
-  @keyframes sparklePop { from { transform: scale(0) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 0.7; } }
-  .success-check { width: 88px; height: 88px; margin: 0 auto 24px; }
-  .success-circle { stroke-dasharray: 226; stroke-dashoffset: 226; transform-origin: center; transform: rotate(-90deg); }
-  .success-state.is-visible .success-circle { animation: drawCircle 0.55s 0.1s cubic-bezier(0.4,0,0.2,1) forwards; }
-  @keyframes drawCircle { to { stroke-dashoffset: 0; } }
-  .success-tick { stroke-dasharray: 50; stroke-dashoffset: 50; }
-  .success-state.is-visible .success-tick { animation: drawTick 0.4s 0.65s cubic-bezier(0.4,0,0.2,1) forwards; }
+
+  /* Hero image — sits behind the card */
+  .success-hero-img {
+    display: flex;
+    justify-content: center;
+    margin-bottom: -40px;
+    position: relative;
+    z-index: 1;
+  }
+  .success-hero-img img {
+    width: clamp(260px, 62vw, 500px);
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,0.12));
+    animation: heroImgIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes heroImgIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Card — overlays on top of the image */
+  .success-card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 40px 48px 52px;
+    text-align: center;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.06);
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Checkmark */
+  .success-check-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 88px;
+    height: 88px;
+    filter: drop-shadow(0 6px 16px rgba(63,211,213,0.35));
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .success-check-svg { width: 88px; height: 88px; overflow: visible; }
+
+  .success-check-bg {
+    fill: var(--teal);
+    transform-origin: 42.53px 42.52px;
+    transform: scale(0);
+  }
+  .success-state.is-visible .success-check-bg {
+    animation: checkPop 0.45s 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  @keyframes checkPop { to { transform: scale(1); } }
+
+  .success-check-tick {
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+  }
+  .success-state.is-visible .success-check-tick {
+    animation: drawTick 0.4s 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
   @keyframes drawTick { to { stroke-dashoffset: 0; } }
-  .success-title, .success-text, .success-badge { opacity: 0; transform: translateY(10px); }
-  .success-state.is-visible .success-title { animation: fadeUp 0.4s 1.05s ease forwards; }
-  .success-state.is-visible .success-text  { animation: fadeUp 0.4s 1.2s ease forwards; }
-  .success-state.is-visible .success-badge { animation: fadeUp 0.4s 1.35s ease forwards; }
+
+  /* Title */
+  .success-title-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-title-wrap { animation: fadeUp 0.4s 1s ease forwards; }
+
+  .success-title {
+    font-size: clamp(1.9rem, 5.5vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    color: var(--black);
+    text-transform: uppercase;
+  }
+  .success-title--pink { color: var(--pink); }
+
+  .success-underline {
+    display: block;
+    width: clamp(140px, 70%, 340px);
+    height: 10px;
+    margin-top: 6px;
+    margin-left:20px;
+  }
+
+  /* Body */
+  .success-text {
+    font-size: clamp(0.87rem, 2vw, 0.97rem);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.75;
+    max-width: 440px;
+    margin: 22px auto 32px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-text { animation: fadeUp 0.4s 1.15s ease forwards; }
+  .success-brand { color: var(--pink); font-weight: 800; }
+
+  /* Button */
+  .success-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: 2px solid var(--pink);
+    color: var(--pink);
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 13px 32px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-btn { animation: fadeUp 0.4s 1.3s ease forwards; }
+  .success-btn:hover {
+    background: var(--pink);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(233,41,93,0.35);
+  }
+
   @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-  .success-title { font-size: 2rem; font-weight: 900; color: var(--black); margin-bottom: 12px; }
-  .success-text { font-size: 0.95rem; font-weight: 500; color: var(--muted); line-height: 1.65; max-width: 400px; margin: 0 auto 24px; }
-  .success-badge { display: inline-block; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; color: var(--pink); background: rgba(233,41,93,0.07); border: 1.5px solid rgba(233,41,93,0.2); padding: 8px 20px; border-radius: 999px; }
+
+  @media (max-width: 680px) {
+    .success-hero-img { margin-bottom: -56px; }
+    .success-card { padding: 32px 24px 40px; border-radius: 22px; }
+    .success-check-wrap { width: 76px; height: 76px; }
+    .success-check-svg { width: 76px; height: 76px; }
+  }
 
   .btn-confirm.is-loading { pointer-events: none; opacity: 0.8; }
   .btn-confirm.is-loading svg { display: none; }
@@ -1782,8 +1945,13 @@
       if (!res.ok) throw new Error('Submission failed');
 
       reviewPage.style.display = 'none';
+      const heroEl = document.querySelector('.hero');
+      heroEl.querySelector('.hero__inner').style.display = 'none';
+      heroEl.style.padding = '0';
+      document.getElementById('stage-bar').style.display = 'none';
       successState.style.display = 'block';
-      successState.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.querySelector('.form-wrap').style.paddingBottom = '100px';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       requestAnimationFrame(() => requestAnimationFrame(() => successState.classList.add('is-visible')));
 
     } catch {
