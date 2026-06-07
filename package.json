@@ -4,14 +4,14 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node fix-wrangler.mjs",
+    "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
-    "@astrojs/cloudflare": "^13.6.1",
+    "@astrojs/cloudflare": "^12.5.0",
     "@supabase/supabase-js": "^2.107.0",
-    "astro": "^6.4.4",
+    "astro": "^5.9.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
