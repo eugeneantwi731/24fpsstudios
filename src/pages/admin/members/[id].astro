@@ -1,0 +1,960 @@
+---
+export const prerender = false;
+import { getAdminSupabase } from 'src/lib/supabase-admin';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const supabase = getAdminSupabase();
+
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+const { id } = Astro.params;
+
+const { data: member, error } = await supabase
+  .from('member_submissions')
+  .select('*')
+  .eq('id', id)
+  .maybeSingle();
+
+if (!member || error) return Astro.redirect('/admin/members');
+
+// Format socials
+const socials: Record<string, string> = member.socials || {};
+const expertise: string[] = Array.isArray(member.expertise) ? member.expertise : [];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{member.name} — Review — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink:    #E9295D;
+      --teal:    #3FD3D5;
+      --yellow:  #FEC843;
+      --purple:  #9F6ACD;
+      --black:   #1A1A1A;
+      --white:   #FFFFFF;
+      --off:     #F8F5F5;
+      --muted:   #6B7280;
+      --border:  rgba(26,26,26,0.10);
+      --pink-light:   rgba(233,41,93,0.08);
+      --teal-light:   rgba(63,211,213,0.10);
+      --yellow-light: rgba(254,200,67,0.12);
+      --purple-light: rgba(159,106,205,0.10);
+      --green:   #22c55e;
+      --green-light: rgba(34,197,94,0.10);
+    }
+    html, body { height: 100%; font-family: 'Raleway', sans-serif; background: var(--off); color: var(--black); -webkit-font-smoothing: antialiased; }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+    /* SIDEBAR — same as other pages */
+    .sidebar { grid-row: 1 / -1; background: var(--white); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10; }
+    .sidebar__brand { padding: 28px 24px 20px; border-bottom: 1.5px solid var(--border); }
+    .sidebar__logo { display: flex; align-items: baseline; gap: 0; line-height: 1; margin-bottom: 4px; }
+    .sidebar__logo-num, .sidebar__logo-fps { font-size: 2rem; font-weight: 900; color: var(--black); letter-spacing: -0.03em; }
+    .sidebar__logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); margin-left: 2px; margin-bottom: 5px; flex-shrink: 0; align-self: flex-end; }
+    .sidebar__tag { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+    .sidebar__admin-badge { margin-top: 14px; display: flex; align-items: center; gap: 10px; background: var(--off); border-radius: 12px; padding: 10px 12px; }
+    .sidebar__avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .sidebar__admin-info { flex: 1; min-width: 0; }
+    .sidebar__admin-name { font-size: 0.82rem; font-weight: 800; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__admin-role { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); }
+    .sidebar__nav { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar__section-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 12px 8px 6px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; text-decoration: none; font-size: 0.84rem; font-weight: 700; color: var(--muted); transition: background 0.18s, color 0.18s; }
+    .nav-item:hover { background: var(--off); color: var(--black); }
+    .nav-item.is-active { background: var(--pink-light); color: var(--pink); }
+    .nav-item__icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--off); }
+    .nav-item.is-active .nav-item__icon { background: rgba(233,41,93,0.12); }
+    .nav-item__icon svg { width: 16px; height: 16px; }
+    .nav-item__badge { margin-left: auto; background: var(--pink); color: white; font-size: 0.65rem; font-weight: 900; padding: 2px 7px; border-radius: 999px; min-width: 20px; text-align: center; }
+    .nav-item--coming { opacity: 0.45; pointer-events: none; }
+    .nav-item__soon { margin-left: auto; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--off); padding: 2px 6px; border-radius: 5px; }
+    .sidebar__footer { padding: 16px; border-top: 1.5px solid var(--border); }
+    .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: none; border: none; font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: background 0.18s, color 0.18s; }
+    .logout-btn:hover { background: rgba(233,41,93,0.06); color: var(--pink); }
+    .logout-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* PAGE CONTENT */
+    .page-body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* TOPBAR */
+    .topbar { background: var(--white); border-bottom: 1.5px solid var(--border); padding: 14px 32px; display: flex; align-items: center; gap: 14px; }
+    .topbar__back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--white); transition: all 0.18s; }
+    .topbar__back:hover { border-color: var(--pink); color: var(--pink); }
+    .topbar__back svg { width: 13px; height: 13px; }
+    .topbar__title { font-size: 1rem; font-weight: 900; color: var(--black); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar__status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .topbar__status-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .topbar__status-badge--pending  { background: rgba(254,200,67,0.15); color: #8a6000; }
+    .topbar__status-badge--pending::before  { background: #FEC843; }
+    .topbar__status-badge--approved { background: rgba(63,211,213,0.12); color: #0a7e80; }
+    .topbar__status-badge--approved::before { background: var(--teal); }
+    .topbar__status-badge--rejected { background: rgba(233,41,93,0.1);  color: var(--pink); }
+    .topbar__status-badge--rejected::before { background: var(--pink); }
+
+    /* MAIN CONTENT */
+    .main { padding: 28px 32px 64px; flex: 1; }
+
+    /* TWO-COL LAYOUT */
+    .review-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+
+    /* LEFT COLUMN — profile data */
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* RIGHT COLUMN — actions */
+    .right-col { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+
+    /* SECTION CARD */
+    .card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; animation: fadeUp 0.35s ease both; }
+    .card__header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--off); }
+    .card__header-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .card__header-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .card__body { padding: 22px; }
+
+    /* PROFILE HERO */
+    .profile-hero { display: flex; align-items: flex-start; gap: 20px; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 18px; object-fit: cover; flex-shrink: 0; background: var(--off); }
+    .profile-avatar-init { width: 80px; height: 80px; border-radius: 18px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1.4rem; font-weight: 900; color: var(--black); line-height: 1.15; }
+    .profile-nickname { font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-top: 3px; }
+    .profile-role-line { font-size: 0.84rem; font-weight: 700; color: var(--black); margin-top: 8px; }
+    .profile-program { font-size: 0.74rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+    .profile-badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .cat-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .cat-badge--student  { background: var(--teal-light);   color: #0a7e80; }
+    .cat-badge--alumni   { background: var(--purple-light);  color: var(--purple); }
+    .cat-badge--faculty  { background: var(--yellow-light);  color: #8a6000; }
+    .initials-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; background: var(--off); color: var(--muted); border: 1px solid var(--border); }
+
+    /* FIELD ROWS */
+    .field-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .field-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .field-row:first-child { padding-top: 0; }
+    .field-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 100px; flex-shrink: 0; padding-top: 2px; }
+    .field-value { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 600; color: var(--black); word-break: break-word; line-height: 1.55; }
+    .field-value a { color: var(--pink); text-decoration: none; }
+    .field-value a:hover { text-decoration: underline; }
+    .field-empty { color: var(--muted); font-style: italic; font-weight: 500; }
+
+    /* EDITABLE FIELD */
+    .field-edit-wrap { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 8px; }
+    .field-edit-input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 600; color: var(--black); outline: none; background: var(--white); transition: border-color 0.18s; min-width: 0; }
+    .field-edit-input:focus { border-color: var(--pink); }
+    .field-edit-input.is-textarea { resize: vertical; min-height: 80px; line-height: 1.55; }
+    .field-edit-save { padding: 7px 13px; border-radius: 8px; background: var(--pink); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.72rem; font-weight: 800; cursor: pointer; white-space: nowrap; transition: background 0.18s; flex-shrink: 0; }
+    .field-edit-save:hover { background: #d4234f; }
+    .edit-toggle { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 10px; font-family: 'Raleway', sans-serif; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.18s; flex-shrink: 0; }
+    .edit-toggle:hover { border-color: var(--pink); color: var(--pink); }
+
+    /* TAGS */
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--yellow-light); color: #8a6000; font-size: 0.72rem; font-weight: 800; }
+    .tag-pill button { background: none; border: none; cursor: pointer; color: inherit; line-height: 1; font-size: 0.7rem; opacity: 0.6; transition: opacity 0.15s; }
+    .tag-pill button:hover { opacity: 1; }
+    .tag-add-row { display: flex; gap: 6px; margin-top: 8px; }
+    .tag-add-input { flex: 1; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--black); outline: none; background: var(--white); transition: border-color 0.18s; }
+    .tag-add-input:focus { border-color: var(--pink); }
+    .tag-add-btn { padding: 7px 13px; border-radius: 8px; background: var(--pink); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.72rem; font-weight: 800; cursor: pointer; }
+
+    /* SOCIALS */
+    .social-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; }
+    .social-platform { font-size: 0.72rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; width: 80px; flex-shrink: 0; }
+    .social-url { font-size: 0.82rem; font-weight: 600; color: var(--black); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .social-url a { color: var(--pink); text-decoration: none; }
+    .social-url a:hover { text-decoration: underline; }
+
+    /* PHOTO */
+    .photo-section { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+    .photo-large { width: 140px; height: 140px; border-radius: 18px; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
+    .photo-large-placeholder { width: 140px; height: 140px; border-radius: 18px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; border: 2px solid var(--border); }
+    .photo-info { flex: 1; }
+    .photo-url-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .photo-url-text { font-size: 0.75rem; font-weight: 500; color: var(--muted); word-break: break-all; line-height: 1.5; margin-bottom: 10px; }
+    .photo-replace-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+    .photo-replace-btn:hover { border-color: var(--pink); color: var(--pink); }
+    .photo-replace-btn svg { width: 13px; height: 13px; }
+    #photo-file-input { display: none; }
+
+    /* METADATA */
+    .meta-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+    .meta-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .meta-row:first-child { padding-top: 0; }
+    .meta-key { font-weight: 700; color: var(--muted); }
+    .meta-val { font-weight: 700; color: var(--black); text-align: right; }
+    .meta-val--mono { font-family: monospace; font-size: 0.72rem; color: var(--muted); }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 14px; font-size: 0.84rem; font-weight: 700; box-shadow: 0 8px 32px rgba(0,0,0,0.15); transform: translateY(80px); opacity: 0; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease; pointer-events: none; }
+    .toast.is-visible { transform: translateY(0); opacity: 1; }
+    .toast--success { background: #111; color: white; }
+    .toast--error   { background: var(--pink); color: white; }
+    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ACTION BUTTONS (right col) */
+    .action-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; padding: 20px; animation: fadeUp 0.35s 0.1s ease both; }
+    .action-card__title { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+    .action-btn-group { display: flex; flex-direction: column; gap: 8px; }
+
+    .action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 16px; border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; border: none; cursor: pointer; transition: all 0.18s; }
+    .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+    .action-btn--approve { background: rgba(34,197,94,0.12); color: #166534; border: 1.5px solid rgba(34,197,94,0.25); }
+    .action-btn--approve:hover { background: #22c55e; color: white; border-color: #22c55e; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(34,197,94,0.3); }
+    .action-btn--reject  { background: var(--pink-light); color: var(--pink); border: 1.5px solid rgba(233,41,93,0.2); }
+    .action-btn--reject:hover  { background: var(--pink); color: white; border-color: var(--pink); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(233,41,93,0.3); }
+    .action-btn--delete  { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+    .action-btn--delete:hover  { background: #fef2f2; color: #b91c1c; border-color: #fca5a5; }
+    .action-btn--restore { background: var(--yellow-light); color: #8a6000; border: 1.5px solid rgba(254,200,67,0.3); }
+    .action-btn--restore:hover { background: var(--yellow); color: var(--black); border-color: var(--yellow); }
+    .action-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+    .action-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* ADMIN NOTES */
+    .notes-textarea { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--black); outline: none; resize: vertical; min-height: 90px; line-height: 1.55; transition: border-color 0.18s; background: var(--white); }
+    .notes-textarea:focus { border-color: var(--pink); }
+    .notes-save-btn { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; background: var(--black); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; transition: background 0.18s; }
+    .notes-save-btn:hover { background: #333; }
+
+    /* EDIT LOG */
+    .edit-log-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+    .edit-log-item { font-size: 0.74rem; font-weight: 600; color: var(--muted); border-left: 3px solid var(--border); padding-left: 10px; line-height: 1.5; }
+    .edit-log-item strong { color: var(--black); font-weight: 800; }
+
+    /* DELETE CONFIRM MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; backdrop-filter: blur(4px); }
+    .modal-overlay.is-open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--white); border-radius: 24px; padding: 32px; max-width: 400px; width: 90%; transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+    .modal-overlay.is-open .modal { transform: scale(1); }
+    .modal__icon { width: 56px; height: 56px; border-radius: 50%; background: var(--pink-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+    .modal__icon svg { width: 26px; height: 26px; color: var(--pink); }
+    .modal__title { font-size: 1.1rem; font-weight: 900; color: var(--black); text-align: center; margin-bottom: 8px; }
+    .modal__sub { font-size: 0.82rem; font-weight: 500; color: var(--muted); text-align: center; line-height: 1.6; margin-bottom: 24px; }
+    .modal__sub strong { color: var(--black); font-weight: 800; }
+    .modal__actions { display: flex; gap: 10px; }
+    .modal__cancel { flex: 1; padding: 11px; border-radius: 12px; background: var(--off); color: var(--black); font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; border: 1.5px solid var(--border); cursor: pointer; transition: background 0.18s; }
+    .modal__cancel:hover { background: #efefef; }
+    .modal__confirm { flex: 1; padding: 11px; border-radius: 12px; background: var(--pink); color: white; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; border: none; cursor: pointer; transition: background 0.18s; }
+    .modal__confirm:hover { background: #d4234f; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 1100px) {
+      .review-layout { grid-template-columns: 1fr; }
+      .right-col { position: static; }
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { padding: 12px 20px; }
+      .main { padding: 20px 16px 64px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="alert" aria-live="polite">
+  <svg viewBox="0 0 24 24" fill="none" id="toast-icon"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+  <span id="toast-msg">Saved</span>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal__icon">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="modal__title">Delete this submission?</div>
+    <div class="modal__sub">This will permanently delete <strong id="modal-name"></strong>'s submission and their photo from storage. This cannot be undone.</div>
+    <div class="modal__actions">
+      <button class="modal__cancel" id="modal-cancel">Cancel</button>
+      <button class="modal__confirm" id="modal-confirm">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__logo">
+        <span class="sidebar__logo-num">24</span>
+        <span class="sidebar__logo-fps">fps.</span>
+        <span class="sidebar__logo-dot"></span>
+      </div>
+      <div class="sidebar__tag">Decode Animation Lab</div>
+      <div class="sidebar__admin-badge">
+        <div class="sidebar__avatar">{adminUser?.username?.slice(0,2) ?? 'AD'}</div>
+        <div class="sidebar__admin-info">
+          <div class="sidebar__admin-name">{adminUser?.username ?? 'Admin'}</div>
+          <div class="sidebar__admin-role">{adminUser?.role ?? 'admin'}</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <span class="sidebar__section-label">Overview</span>
+      <a href="/admin/dashboard" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg></span>
+        Dashboard
+      </a>
+      <span class="sidebar__section-label">Members</span>
+      <a href="/admin/members" class="nav-item is-active">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        All Members
+      </a>
+      <a href="/admin/members?status=pending" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Pending Review
+      </a>
+      <span class="sidebar__section-label">Content</span>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
+    </nav>
+    <div class="sidebar__footer">
+      <form method="POST" action="/api/admin/logout">
+        <button type="submit" class="logout-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- PAGE BODY -->
+  <div class="page-body">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <a href="/admin/members" class="topbar__back">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All Members
+      </a>
+      <div class="topbar__title">{member.name}</div>
+      <span class={`topbar__status-badge topbar__status-badge--${member.status}`} id="status-badge-topbar">{member.status}</span>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="review-layout">
+
+        <!-- ── LEFT: PROFILE DATA ── -->
+        <div class="left-col">
+
+          <!-- IDENTITY CARD -->
+          <div class="card" style="animation-delay:0.04s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--pink)"></span>
+              <span class="card__header-title">Identity</span>
+            </div>
+            <div class="card__body">
+              <div class="profile-hero">
+                {member.photo_url
+                  ? <img src={member.photo_url} alt={member.name} class="profile-avatar" />
+                  : <div class="profile-avatar-init">{member.name?.split(' ').map((w: string) => w[0]).slice(0,2).join('')}</div>
+                }
+                <div class="profile-info">
+                  <div class="profile-name" id="display-name">{member.name}</div>
+                  {member.nickname && <div class="profile-nickname">"{member.nickname}"</div>}
+                  <div class="profile-role-line">{member.role}</div>
+                  {member.program && <div class="profile-program">{member.program}</div>}
+                  <div class="profile-badges">
+                    <span class={`cat-badge cat-badge--${member.category}`}>{member.category}</span>
+                    {member.initials && <span class="initials-chip">{member.initials}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EDITABLE FIELDS CARD -->
+          <div class="card" style="animation-delay:0.08s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--teal)"></span>
+              <span class="card__header-title">Profile Details</span>
+            </div>
+            <div class="card__body">
+
+              <!-- Name -->
+              <div class="field-row" id="row-name">
+                <div class="field-label">Full Name</div>
+                <div class="field-value" id="val-name">{member.name}</div>
+                <button class="edit-toggle" onclick="startEdit('name', 'text')">Edit</button>
+              </div>
+              <!-- Role -->
+              <div class="field-row" id="row-role">
+                <div class="field-label">Role</div>
+                <div class="field-value" id="val-role">{member.role}</div>
+                <button class="edit-toggle" onclick="startEdit('role', 'text')">Edit</button>
+              </div>
+              <!-- Category -->
+              <div class="field-row" id="row-category">
+                <div class="field-label">Category</div>
+                <div class="field-value" id="val-category">
+                  <span class={`cat-badge cat-badge--${member.category}`} id="cat-badge-display">{member.category}</span>
+                </div>
+                <button class="edit-toggle" onclick="startSelectEdit('category', ['student','alumni','faculty'])">Edit</button>
+              </div>
+              <!-- Program -->
+              <div class="field-row" id="row-program">
+                <div class="field-label">Program</div>
+                <div class="field-value" id="val-program">{member.program || <span class="field-empty">—</span>}</div>
+                <button class="edit-toggle" onclick="startEdit('program', 'text')">Edit</button>
+              </div>
+              <!-- Nickname -->
+              <div class="field-row" id="row-nickname">
+                <div class="field-label">Nickname</div>
+                <div class="field-value" id="val-nickname">{member.nickname || <span class="field-empty">—</span>}</div>
+                <button class="edit-toggle" onclick="startEdit('nickname', 'text')">Edit</button>
+              </div>
+              <!-- Bio -->
+              <div class="field-row" id="row-bio">
+                <div class="field-label">Bio</div>
+                <div class="field-value" id="val-bio" style="white-space:pre-wrap">{member.bio}</div>
+                <button class="edit-toggle" onclick="startEdit('bio', 'textarea')">Edit</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTACT CARD -->
+          <div class="card" style="animation-delay:0.12s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--purple)"></span>
+              <span class="card__header-title">Contact & Portfolio</span>
+            </div>
+            <div class="card__body">
+              <div class="field-row" id="row-email">
+                <div class="field-label">Email</div>
+                <div class="field-value" id="val-email"><a href={`mailto:${member.email}`}>{member.email}</a></div>
+                <button class="edit-toggle" onclick="startEdit('email', 'text')">Edit</button>
+              </div>
+              <div class="field-row" id="row-portfolio">
+                <div class="field-label">Portfolio</div>
+                <div class="field-value" id="val-portfolio">
+                  {member.portfolio
+                    ? <a href={member.portfolio} target="_blank" rel="noopener">{member.portfolio}</a>
+                    : <span class="field-empty">Not provided</span>
+                  }
+                </div>
+                <button class="edit-toggle" onclick="startEdit('portfolio', 'text')">Edit</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- EXPERTISE CARD -->
+          <div class="card" style="animation-delay:0.15s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--yellow)"></span>
+              <span class="card__header-title">Expertise / Skills</span>
+            </div>
+            <div class="card__body">
+              <div class="tags-wrap" id="expertise-tags">
+                {expertise.map((tag: string) => (
+                  <span class="tag-pill" data-tag={tag}>
+                    {tag}
+                    <button type="button" onclick={`removeTag('${tag}')`} aria-label={`Remove ${tag}`}>✕</button>
+                  </span>
+                ))}
+              </div>
+              <div class="tag-add-row">
+                <input class="tag-add-input" id="tag-add-input" type="text" placeholder="Add a skill…" />
+                <button class="tag-add-btn" type="button" id="tag-add-btn">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SOCIAL LINKS CARD -->
+          <div class="card" style="animation-delay:0.18s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--teal)"></span>
+              <span class="card__header-title">Social Links</span>
+            </div>
+            <div class="card__body">
+              {Object.keys(socials).length > 0 ? (
+                Object.entries(socials).map(([platform, url]) => (
+                  <div class="social-row">
+                    <div class="social-platform">{platform}</div>
+                    <div class="social-url"><a href={url as string} target="_blank" rel="noopener">{url as string}</a></div>
+                  </div>
+                ))
+              ) : (
+                <span class="field-empty">No social links provided</span>
+              )}
+            </div>
+          </div>
+
+          <!-- PHOTO CARD -->
+          <div class="card" style="animation-delay:0.20s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--pink)"></span>
+              <span class="card__header-title">Profile Photo</span>
+            </div>
+            <div class="card__body">
+              <div class="photo-section">
+                {member.photo_url
+                  ? <img src={member.photo_url} alt={member.name} class="photo-large" id="photo-preview" />
+                  : <div class="photo-large-placeholder" id="photo-preview">{member.name?.split(' ').map((w: string) => w[0]).slice(0,2).join('')}</div>
+                }
+                <div class="photo-info">
+                  <div class="photo-url-label">Storage URL</div>
+                  <div class="photo-url-text">{member.photo_url || 'No photo uploaded'}</div>
+                  <input type="file" id="photo-file-input" accept="image/*" />
+                  <button class="photo-replace-btn" type="button" onclick="document.getElementById('photo-file-input').click()">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Replace Photo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- METADATA CARD -->
+          <div class="card" style="animation-delay:0.22s">
+            <div class="card__header">
+              <span class="card__header-dot" style="background:var(--muted)"></span>
+              <span class="card__header-title">Submission Metadata</span>
+            </div>
+            <div class="card__body">
+              <div class="meta-row">
+                <span class="meta-key">Submission ID</span>
+                <span class="meta-val meta-val--mono">{member.id}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Submitted</span>
+                <span class="meta-val">{new Date(member.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              {member.reviewed_by && (
+                <div class="meta-row">
+                  <span class="meta-key">Reviewed by</span>
+                  <span class="meta-val">{member.reviewed_by}</span>
+                </div>
+              )}
+              {member.reviewed_at && (
+                <div class="meta-row">
+                  <span class="meta-key">Reviewed at</span>
+                  <span class="meta-val">{new Date(member.reviewed_at).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              )}
+              {member.trashed_by && (
+                <div class="meta-row">
+                  <span class="meta-key">Deleted by</span>
+                  <span class="meta-val" style="color:var(--pink)">{member.trashed_by}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- EDIT LOG CARD -->
+          {member.edit_log && Array.isArray(member.edit_log) && member.edit_log.length > 0 && (
+            <div class="card" style="animation-delay:0.24s">
+              <div class="card__header">
+                <span class="card__header-dot" style="background:var(--muted)"></span>
+                <span class="card__header-title">Edit History</span>
+              </div>
+              <div class="card__body">
+                <div class="edit-log-list">
+                  {[...member.edit_log].reverse().map((entry: any) => (
+                    <div class="edit-log-item">
+                      <strong>{entry.field}</strong> changed to "{entry.new_value}"
+                      <br /><span style="font-size:0.68rem">{new Date(entry.at).toLocaleString('en-GB')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        <!-- ── RIGHT: ACTIONS ── -->
+        <div class="right-col">
+
+          <!-- STATUS ACTIONS -->
+          <div class="action-card">
+            <div class="action-card__title">Review Actions</div>
+            <div class="action-btn-group">
+              <button class="action-btn action-btn--approve" id="btn-approve" onclick="updateStatus('approved')">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+                Approve Submission
+              </button>
+              <button class="action-btn action-btn--reject" id="btn-reject" onclick="updateStatus('rejected')">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Reject Submission
+              </button>
+              {member.status !== 'pending' && (
+                <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Reset to Pending
+                </button>
+              )}
+              <div class="action-divider"></div>
+              <button class="action-btn action-btn--delete" id="btn-delete" onclick="openDeleteModal()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+
+          <!-- ADMIN NOTES -->
+          <div class="action-card">
+            <div class="action-card__title">Admin Notes</div>
+            <textarea class="notes-textarea" id="admin-notes" placeholder="Private notes about this submission…">{member.admin_notes || ''}</textarea>
+            <button class="notes-save-btn" onclick="saveNotes()">Save Notes</button>
+          </div>
+
+          <!-- QUICK INFO -->
+          <div class="action-card">
+            <div class="action-card__title">Quick Info</div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="meta-row">
+                <span class="meta-key">Status</span>
+                <span class="meta-val" id="status-display" style={`color:${member.status === 'approved' ? '#0a7e80' : member.status === 'rejected' ? 'var(--pink)' : '#8a6000'}`}>{member.status}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Category</span>
+                <span class="meta-val">{member.category}</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Email</span>
+                <span class="meta-val" style="font-size:0.72rem;word-break:break-all">{member.email}</span>
+              </div>
+              <div class="meta-row" style="border-bottom:none;padding-bottom:0">
+                <span class="meta-key">Submitted</span>
+                <span class="meta-val">{new Date(member.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script define:vars={{ memberId: member.id, memberName: member.name, initialExpertise: expertise, adminUsername: adminUser?.username ?? 'admin' }}>
+  // ── CONFIG ──
+  const SUPABASE_URL  = import.meta.env.PUBLIC_SUPABASE_URL;
+  const SUPABASE_ANON = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  // Track current expertise state
+  let currentTags = [...initialExpertise];
+
+  // ── TOAST ──
+  function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-msg');
+    const iconEl = document.getElementById('toast-icon');
+    msgEl.textContent = msg;
+    toast.className = `toast toast--${type}`;
+    if (type === 'success') {
+      iconEl.innerHTML = `<path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>`;
+    } else {
+      iconEl.innerHTML = `<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+    }
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => toast.classList.remove('is-visible'), 3000);
+  }
+
+  // ── SUPABASE PATCH ──
+  async function patchMember(fields) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(fields),
+    });
+    if (!res.ok) throw new Error('Update failed');
+  }
+
+  // ── STATUS UPDATE ──
+  async function updateStatus(newStatus) {
+    const btns = document.querySelectorAll('.action-btn');
+    btns.forEach(b => b.disabled = true);
+    try {
+      await patchMember({
+        status: newStatus,
+        reviewed_by: adminUsername,
+        reviewed_at: new Date().toISOString(),
+      });
+      // Update UI
+      const badge = document.getElementById('status-badge-topbar');
+      const display = document.getElementById('status-display');
+      if (badge) { badge.textContent = newStatus; badge.className = `topbar__status-badge topbar__status-badge--${newStatus}`; }
+      if (display) {
+        display.textContent = newStatus;
+        display.style.color = newStatus === 'approved' ? '#0a7e80' : newStatus === 'rejected' ? 'var(--pink)' : '#8a6000';
+      }
+      const msgMap = { approved: 'Submission approved!', rejected: 'Submission rejected.', pending: 'Reset to pending.' };
+      showToast(msgMap[newStatus] || 'Status updated.');
+    } catch {
+      showToast('Failed to update status. Check connection.', 'error');
+    } finally {
+      btns.forEach(b => b.disabled = false);
+    }
+  }
+
+  // ── INLINE FIELD EDIT ──
+  function startEdit(field, type) {
+    const row = document.getElementById(`row-${field}`);
+    const valEl = document.getElementById(`val-${field}`);
+    const currentText = valEl.textContent.trim();
+
+    // Build edit UI
+    const wrap = document.createElement('div');
+    wrap.className = 'field-edit-wrap';
+
+    let input;
+    if (type === 'textarea') {
+      input = document.createElement('textarea');
+      input.className = 'field-edit-input is-textarea';
+    } else {
+      input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'field-edit-input';
+    }
+    input.value = currentText === '—' ? '' : currentText;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'field-edit-save';
+    saveBtn.textContent = 'Save';
+
+    wrap.appendChild(input);
+    wrap.appendChild(saveBtn);
+
+    // Replace the value el and edit button
+    const editToggle = row.querySelector('.edit-toggle');
+    valEl.style.display = 'none';
+    editToggle.style.display = 'none';
+    row.insertBefore(wrap, editToggle);
+
+    input.focus();
+
+    // Save handler
+    async function doSave() {
+      const newVal = input.value.trim();
+      saveBtn.textContent = '…';
+      saveBtn.disabled = true;
+      try {
+        // Build edit log entry
+        const logEntry = { field, old_value: currentText, new_value: newVal, by: adminUsername, at: new Date().toISOString() };
+        // We need to fetch current edit_log first
+        const logRes = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}&select=edit_log`, {
+          headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+        });
+        const logData = await logRes.json();
+        const currentLog = logData[0]?.edit_log || [];
+        currentLog.push(logEntry);
+
+        await patchMember({ [field]: newVal || null, edit_log: currentLog });
+
+        // Update display
+        if (field === 'name') {
+          document.getElementById('display-name').textContent = newVal;
+          document.getElementById('topbar__title') && (document.querySelector('.topbar__title').textContent = newVal);
+        }
+        valEl.textContent = newVal || '—';
+        valEl.style.display = '';
+        editToggle.style.display = '';
+        wrap.remove();
+        showToast(`${field} updated.`);
+      } catch {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        showToast('Save failed. Try again.', 'error');
+      }
+    }
+
+    saveBtn.addEventListener('click', doSave);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && type !== 'textarea') doSave(); if (e.key === 'Escape') { valEl.style.display = ''; editToggle.style.display = ''; wrap.remove(); } });
+  }
+
+  // ── SELECT EDIT (for category) ──
+  function startSelectEdit(field, options) {
+    const row = document.getElementById(`row-${field}`);
+    const valEl = document.getElementById(`val-${field}`);
+    const catBadge = document.getElementById('cat-badge-display');
+    const currentVal = catBadge?.textContent.trim() || '';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'field-edit-wrap';
+
+    const select = document.createElement('select');
+    select.className = 'field-edit-input';
+    options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+      if (opt === currentVal) o.selected = true;
+      select.appendChild(o);
+    });
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'field-edit-save';
+    saveBtn.textContent = 'Save';
+
+    wrap.appendChild(select);
+    wrap.appendChild(saveBtn);
+
+    const editToggle = row.querySelector('.edit-toggle');
+    valEl.style.display = 'none';
+    editToggle.style.display = 'none';
+    row.insertBefore(wrap, editToggle);
+
+    saveBtn.addEventListener('click', async () => {
+      const newVal = select.value;
+      saveBtn.textContent = '…';
+      saveBtn.disabled = true;
+      try {
+        await patchMember({ [field]: newVal });
+        // Update the badge
+        if (catBadge) { catBadge.textContent = newVal; catBadge.className = `cat-badge cat-badge--${newVal}`; }
+        valEl.style.display = '';
+        editToggle.style.display = '';
+        wrap.remove();
+        showToast(`Category updated to ${newVal}.`);
+      } catch {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        showToast('Save failed.', 'error');
+      }
+    });
+    select.addEventListener('keydown', (e) => { if (e.key === 'Escape') { valEl.style.display = ''; editToggle.style.display = ''; wrap.remove(); } });
+    select.focus();
+  }
+
+  // ── EXPERTISE TAGS ──
+  async function saveTags(tags) {
+    await patchMember({ expertise: tags });
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById('expertise-tags');
+    wrap.innerHTML = '';
+    currentTags.forEach(tag => {
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill';
+      pill.innerHTML = `${tag} <button type="button" onclick="removeTag('${tag.replace(/'/g,"\\'")}')">✕</button>`;
+      wrap.appendChild(pill);
+    });
+  }
+
+  window.removeTag = async function(tag) {
+    currentTags = currentTags.filter(t => t !== tag);
+    renderTags();
+    try { await saveTags(currentTags); showToast(`"${tag}" removed.`); }
+    catch { showToast('Failed to remove tag.', 'error'); currentTags.push(tag); renderTags(); }
+  };
+
+  const tagInput = document.getElementById('tag-add-input');
+  const tagBtn   = document.getElementById('tag-add-btn');
+
+  async function addTag() {
+    const val = tagInput.value.trim();
+    if (!val || currentTags.includes(val)) { tagInput.focus(); return; }
+    currentTags.push(val);
+    tagInput.value = '';
+    renderTags();
+    try { await saveTags(currentTags); showToast(`"${val}" added.`); }
+    catch { showToast('Failed to add tag.', 'error'); currentTags.pop(); renderTags(); }
+  }
+  tagBtn?.addEventListener('click', addTag);
+  tagInput?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
+
+  // ── ADMIN NOTES ──
+  window.saveNotes = async function() {
+    const notes = document.getElementById('admin-notes').value;
+    try { await patchMember({ admin_notes: notes }); showToast('Notes saved.'); }
+    catch { showToast('Failed to save notes.', 'error'); }
+  };
+
+  // ── DELETE MODAL ──
+  window.openDeleteModal = function() {
+    document.getElementById('modal-name').textContent = memberName;
+    document.getElementById('delete-modal').classList.add('is-open');
+  };
+  document.getElementById('modal-cancel')?.addEventListener('click', () => {
+    document.getElementById('delete-modal').classList.remove('is-open');
+  });
+  document.getElementById('modal-confirm')?.addEventListener('click', async () => {
+    const btn = document.getElementById('modal-confirm');
+    btn.textContent = 'Deleting…';
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
+      });
+      if (!res.ok) throw new Error();
+      window.location.href = '/admin/members';
+    } catch {
+      btn.textContent = 'Yes, Delete';
+      btn.disabled = false;
+      document.getElementById('delete-modal').classList.remove('is-open');
+      showToast('Delete failed. Try again.', 'error');
+    }
+  });
+
+  // ── PHOTO REPLACE ──
+  const photoInput = document.getElementById('photo-file-input');
+  photoInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    showToast('Uploading photo…');
+    try {
+      const slug = memberName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const path = `${Date.now()}-${slug}.jpg`;
+      const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/member-photos/${path}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error('Upload failed');
+      const newUrl = `${SUPABASE_URL}/storage/v1/object/public/member-photos/${path}`;
+      await patchMember({ photo_url: newUrl });
+      // Update preview
+      const preview = document.getElementById('photo-preview');
+      if (preview && preview.tagName === 'IMG') { preview.src = newUrl; }
+      showToast('Photo replaced!');
+    } catch {
+      showToast('Photo upload failed.', 'error');
+    }
+  });
+
+  // Close modal on overlay click
+  document.getElementById('delete-modal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('is-open');
+  });
+</script>
+</body>
+</html>

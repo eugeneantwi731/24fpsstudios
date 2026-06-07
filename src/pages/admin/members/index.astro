@@ -1,0 +1,378 @@
+---
+export const prerender = false;
+import { getAdminSupabase } from 'src/lib/supabase-admin';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const supabase = getAdminSupabase();
+
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+// Read filters from URL
+const statusFilter   = Astro.url.searchParams.get('status')   || 'all';
+const categoryFilter = Astro.url.searchParams.get('category') || 'all';
+const searchQuery    = Astro.url.searchParams.get('q')        || '';
+const page           = Math.max(1, parseInt(Astro.url.searchParams.get('page') || '1'));
+const perPage        = 12;
+
+// Build query
+let query = supabase
+  .from('member_submissions')
+  .select('id, name, nickname, role, category, status, created_at, photo_url, email, program', { count: 'exact' })
+  .order('created_at', { ascending: false })
+  .range((page - 1) * perPage, page * perPage - 1);
+
+if (statusFilter   !== 'all') query = query.eq('status', statusFilter);
+if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+if (searchQuery)               query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,role.ilike.%${searchQuery}%`);
+
+const { data: members, count } = await query;
+
+// Counts per status for tabs
+const { count: pendingCount  } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+const { count: approvedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'approved');
+const { count: rejectedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'rejected');
+const { count: totalCount    } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true });
+
+const totalPages = Math.ceil((count || 0) / perPage);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Members — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #E9295D;
+      --teal:    #3FD3D5;
+      --yellow:  #FEC843;
+      --purple:  #9F6ACD;
+      --black:   #1A1A1A;
+      --white:   #FFFFFF;
+      --off:     #F8F5F5;
+      --muted:   #6B7280;
+      --border:  rgba(26,26,26,0.10);
+      --pink-light:   rgba(233,41,93,0.08);
+      --teal-light:   rgba(63,211,213,0.10);
+      --yellow-light: rgba(254,200,67,0.12);
+      --purple-light: rgba(159,106,205,0.10);
+    }
+
+    html, body { height: 100%; font-family: 'Raleway', sans-serif; background: var(--off); color: var(--black); -webkit-font-smoothing: antialiased; }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar { grid-row: 1 / -1; background: var(--white); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10; }
+    .sidebar__brand { padding: 28px 24px 20px; border-bottom: 1.5px solid var(--border); }
+    .sidebar__logo { display: flex; align-items: baseline; gap: 0; line-height: 1; margin-bottom: 4px; }
+    .sidebar__logo-num, .sidebar__logo-fps { font-size: 2rem; font-weight: 900; color: var(--black); letter-spacing: -0.03em; }
+    .sidebar__logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); margin-left: 2px; margin-bottom: 5px; flex-shrink: 0; align-self: flex-end; }
+    .sidebar__tag { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+    .sidebar__admin-badge { margin-top: 14px; display: flex; align-items: center; gap: 10px; background: var(--off); border-radius: 12px; padding: 10px 12px; }
+    .sidebar__avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .sidebar__admin-info { flex: 1; min-width: 0; }
+    .sidebar__admin-name { font-size: 0.82rem; font-weight: 800; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__admin-role { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); }
+    .sidebar__nav { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar__section-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 12px 8px 6px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; text-decoration: none; font-size: 0.84rem; font-weight: 700; color: var(--muted); transition: background 0.18s, color 0.18s; }
+    .nav-item:hover { background: var(--off); color: var(--black); }
+    .nav-item.is-active { background: var(--pink-light); color: var(--pink); }
+    .nav-item__icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--off); transition: background 0.18s; }
+    .nav-item.is-active .nav-item__icon { background: rgba(233,41,93,0.12); }
+    .nav-item__icon svg { width: 16px; height: 16px; }
+    .nav-item__badge { margin-left: auto; background: var(--pink); color: white; font-size: 0.65rem; font-weight: 900; padding: 2px 7px; border-radius: 999px; min-width: 20px; text-align: center; }
+    .nav-item--coming { opacity: 0.45; pointer-events: none; }
+    .nav-item__soon { margin-left: auto; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--off); padding: 2px 6px; border-radius: 5px; }
+    .sidebar__footer { padding: 16px; border-top: 1.5px solid var(--border); }
+    .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: none; border: none; font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: background 0.18s, color 0.18s; }
+    .logout-btn:hover { background: rgba(233,41,93,0.06); color: var(--pink); }
+    .logout-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* TOPBAR */
+    .topbar { background: var(--white); border-bottom: 1.5px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .topbar__title { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.01em; color: var(--black); }
+    .topbar__sub { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+
+    /* MAIN */
+    .main { padding: 28px 32px 48px; overflow-y: auto; }
+
+    /* FILTER BAR */
+    .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
+    .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+    .search-input { width: 100%; padding: 10px 14px 10px 38px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 600; color: var(--black); outline: none; transition: border-color 0.18s; }
+    .search-input:focus { border-color: var(--pink); }
+    .search-input::placeholder { color: var(--muted); font-weight: 500; }
+
+    .filter-select { padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 12px; background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--black); outline: none; cursor: pointer; transition: border-color 0.18s; }
+    .filter-select:focus { border-color: var(--pink); }
+
+    /* STATUS TABS */
+    .status-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+    .status-tab { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); background: var(--white); transition: all 0.18s; cursor: pointer; }
+    .status-tab:hover { border-color: rgba(233,41,93,0.3); color: var(--pink); }
+    .status-tab.is-active { background: var(--pink); border-color: var(--pink); color: white; }
+    .status-tab__count { background: rgba(255,255,255,0.25); border-radius: 999px; padding: 1px 6px; font-size: 0.65rem; font-weight: 900; }
+    .status-tab.is-active .status-tab__count { background: rgba(255,255,255,0.3); }
+    .status-tab:not(.is-active) .status-tab__count { background: var(--off); color: var(--muted); }
+
+    /* MEMBERS GRID */
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+    .member-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; transition: transform 0.18s, box-shadow 0.18s; animation: fadeUp 0.35s ease both; text-decoration: none; color: inherit; display: block; }
+    .member-card:hover { transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.1); border-color: rgba(233,41,93,0.2); }
+
+    .member-card__top { padding: 20px 20px 16px; display: flex; align-items: flex-start; gap: 14px; }
+    .member-card__avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex-shrink: 0; background: var(--off); }
+    .member-card__avatar-init { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .member-card__info { flex: 1; min-width: 0; }
+    .member-card__name { font-size: 0.95rem; font-weight: 900; color: var(--black); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__role { font-size: 0.74rem; font-weight: 600; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__email { font-size: 0.7rem; font-weight: 500; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .member-card__badges { padding: 0 20px 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    .cat-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .cat-badge--student  { background: var(--teal-light);   color: #0a7e80; }
+    .cat-badge--alumni   { background: var(--purple-light);  color: var(--purple); }
+    .cat-badge--faculty  { background: var(--yellow-light);  color: #8a6000; }
+
+    .status-dot-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .status-dot-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot-badge--pending  { background: rgba(254,200,67,0.15); color: #8a6000; }
+    .status-dot-badge--pending::before  { background: #FEC843; }
+    .status-dot-badge--approved { background: rgba(63,211,213,0.12); color: #0a7e80; }
+    .status-dot-badge--approved::before { background: var(--teal); }
+    .status-dot-badge--rejected { background: rgba(233,41,93,0.1);  color: var(--pink); }
+    .status-dot-badge--rejected::before { background: var(--pink); }
+
+    .member-card__footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--off); }
+    .member-card__date { font-size: 0.7rem; font-weight: 500; color: var(--muted); }
+    .member-card__cta { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pink); display: flex; align-items: center; gap: 4px; }
+    .member-card__cta svg { width: 12px; height: 12px; }
+
+    /* EMPTY STATE */
+    .empty-state { grid-column: 1 / -1; padding: 64px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .empty-state__icon { width: 72px; height: 72px; border-radius: 50%; background: var(--yellow-light); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+    .empty-state__icon svg { width: 34px; height: 34px; color: #b8860b; }
+    .empty-state__title { font-size: 1.1rem; font-weight: 900; color: var(--black); }
+    .empty-state__sub { font-size: 0.84rem; font-weight: 500; color: var(--muted); }
+
+    /* PAGINATION */
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 28px; }
+    .page-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; text-decoration: none; border: 1.5px solid var(--border); color: var(--muted); background: var(--white); transition: all 0.15s; }
+    .page-btn:hover { border-color: var(--pink); color: var(--pink); }
+    .page-btn.is-active { background: var(--pink); border-color: var(--pink); color: white; }
+    .page-btn--nav { width: auto; padding: 0 14px; gap: 6px; }
+    .page-btn--nav svg { width: 14px; height: 14px; }
+    .page-btn--disabled { opacity: 0.35; pointer-events: none; }
+
+    /* RESULT COUNT */
+    .result-count { font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 16px; }
+    .result-count strong { color: var(--black); font-weight: 800; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { padding: 14px 20px; }
+      .main { padding: 20px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__logo">
+        <span class="sidebar__logo-num">24</span>
+        <span class="sidebar__logo-fps">fps.</span>
+        <span class="sidebar__logo-dot"></span>
+      </div>
+      <div class="sidebar__tag">Decode Animation Lab</div>
+      <div class="sidebar__admin-badge">
+        <div class="sidebar__avatar">{adminUser?.username?.slice(0,2) ?? 'AD'}</div>
+        <div class="sidebar__admin-info">
+          <div class="sidebar__admin-name">{adminUser?.username ?? 'Admin'}</div>
+          <div class="sidebar__admin-role">{adminUser?.role ?? 'admin'}</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <span class="sidebar__section-label">Overview</span>
+      <a href="/admin/dashboard" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg></span>
+        Dashboard
+      </a>
+      <span class="sidebar__section-label">Members</span>
+      <a href="/admin/members" class="nav-item is-active">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        All Members
+      </a>
+      <a href="/admin/members?status=pending" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Pending Review
+        {pendingCount && pendingCount > 0 && <span class="nav-item__badge">{pendingCount}</span>}
+      </a>
+      <span class="sidebar__section-label">Content</span>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Events<span class="nav-item__soon">Soon</span></a>
+    </nav>
+    <div class="sidebar__footer">
+      <form method="POST" action="/api/admin/logout">
+        <button type="submit" class="logout-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div>
+      <div class="topbar__title">Members</div>
+      <div class="topbar__sub">{count ?? 0} submissions total</div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- STATUS TABS -->
+    <div class="status-tabs">
+      <a href="/admin/members?category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'all' ? 'is-active' : ''}`}>
+        All <span class="status-tab__count">{totalCount ?? 0}</span>
+      </a>
+      <a href="/admin/members?status=pending&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'pending' ? 'is-active' : ''}`}>
+        Pending <span class="status-tab__count">{pendingCount ?? 0}</span>
+      </a>
+      <a href="/admin/members?status=approved&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'approved' ? 'is-active' : ''}`}>
+        Approved <span class="status-tab__count">{approvedCount ?? 0}</span>
+      </a>
+      <a href="/admin/members?status=rejected&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'rejected' ? 'is-active' : ''}`}>
+        Rejected <span class="status-tab__count">{rejectedCount ?? 0}</span>
+      </a>
+    </div>
+
+    <!-- FILTER BAR -->
+    <form method="GET" action="/admin/members" class="filter-bar" id="filter-form">
+      <input type="hidden" name="status" value={statusFilter} />
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input class="search-input" name="q" type="text" placeholder="Search by name, email, role…" value={searchQuery} />
+      </div>
+      <select class="filter-select" name="category" onchange="this.form.submit()">
+        <option value="all"     selected={categoryFilter === 'all'}>All categories</option>
+        <option value="student" selected={categoryFilter === 'student'}>Student</option>
+        <option value="alumni"  selected={categoryFilter === 'alumni'}>Alumni</option>
+        <option value="faculty" selected={categoryFilter === 'faculty'}>Faculty</option>
+      </select>
+    </form>
+
+    <!-- RESULT COUNT -->
+    {count !== null && (
+      <div class="result-count">
+        Showing <strong>{members?.length ?? 0}</strong> of <strong>{count}</strong> result{count !== 1 ? 's' : ''}
+        {searchQuery && <span> for "<strong>{searchQuery}</strong>"</span>}
+      </div>
+    )}
+
+    <!-- GRID -->
+    <div class="members-grid">
+      {members && members.length > 0 ? members.map((m, i) => (
+        <a href={`/admin/members/${m.id}`} class="member-card" style={`animation-delay: ${i * 0.04}s`}>
+          <div class="member-card__top">
+            {m.photo_url
+              ? <img src={m.photo_url} alt={m.name} class="member-card__avatar" />
+              : <div class="member-card__avatar-init">{m.name?.split(' ').map((w: string) => w[0]).slice(0,2).join('')}</div>
+            }
+            <div class="member-card__info">
+              <div class="member-card__name">{m.name}</div>
+              <div class="member-card__role">{m.role}{m.program ? ` · ${m.program}` : ''}</div>
+              <div class="member-card__email">{m.email}</div>
+            </div>
+          </div>
+          <div class="member-card__badges">
+            <span class={`cat-badge cat-badge--${m.category}`}>{m.category}</span>
+            <span class={`status-dot-badge status-dot-badge--${m.status}`}>{m.status}</span>
+          </div>
+          <div class="member-card__footer">
+            <span class="member-card__date">{new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span class="member-card__cta">Review <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </a>
+      )) : (
+        <div class="empty-state">
+          <div class="empty-state__icon">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="empty-state__title">No members found</div>
+          <div class="empty-state__sub">{searchQuery ? `No results for "${searchQuery}". Try a different search.` : 'No submissions match the current filter.'}</div>
+        </div>
+      )}
+    </div>
+
+    <!-- PAGINATION -->
+    {totalPages > 1 && (
+      <div class="pagination">
+        <a href={`/admin/members?status=${statusFilter}&category=${categoryFilter}&q=${searchQuery}&page=${page - 1}`}
+           class={`page-btn page-btn--nav ${page <= 1 ? 'page-btn--disabled' : ''}`}>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Prev
+        </a>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+          <a href={`/admin/members?status=${statusFilter}&category=${categoryFilter}&q=${searchQuery}&page=${p}`}
+             class={`page-btn ${p === page ? 'is-active' : ''}`}>{p}</a>
+        ))}
+        <a href={`/admin/members?status=${statusFilter}&category=${categoryFilter}&q=${searchQuery}&page=${page + 1}`}
+           class={`page-btn page-btn--nav ${page >= totalPages ? 'page-btn--disabled' : ''}`}>
+          Next
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </a>
+      </div>
+    )}
+
+  </main>
+</div>
+
+<script>
+  // Search submits on Enter
+  const form = document.getElementById('filter-form');
+  const searchInput = form?.querySelector('input[name="q"]');
+  searchInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') form?.submit();
+  });
+</script>
+</body>
+</html>

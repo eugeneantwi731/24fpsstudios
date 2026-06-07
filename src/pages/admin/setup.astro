@@ -1,0 +1,161 @@
+---
+export const prerender = false;
+import { getAdminSupabase } from 'src/lib/supabase-admin';
+
+// If any admin users already exist, this page is closed
+const supabase = getAdminSupabase();
+const { count } = await supabase
+  .from('admin_users')
+  .select('*', { count: 'exact', head: true });
+
+if (count && count > 0) {
+  return Astro.redirect('/admin');
+}
+
+const error = Astro.url.searchParams.get('error');
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup — 24fps Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink: #E9295D; --teal: #3FD3D5; --yellow: #FFD600;
+      --black: #0A0A0A; --surface: #111; --card: #1A1A1A;
+      --border: #2A2A2A; --muted: #666; --white: #fff;
+    }
+    html, body { height: 100%; background: var(--black); color: var(--white);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    .accent-bar { position: fixed; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--pink) 0%, var(--teal) 50%, var(--yellow) 100%); z-index: 10; }
+    .page { position: relative; z-index: 1; min-height: 100vh; display: flex;
+      flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
+    .brand { display: flex; flex-direction: column; align-items: center; gap: 6px;
+      margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+    .brand__logo { display: flex; align-items: baseline; line-height: 1; }
+    .brand__num, .brand__fps { font-size: 2.8rem; font-weight: 900; color: var(--white); letter-spacing: -0.03em; }
+    .brand__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--yellow);
+      margin-left: 3px; margin-bottom: 6px; flex-shrink: 0; align-self: flex-end; }
+    .brand__tag { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em; color: var(--muted);
+      text-transform: uppercase; border: 1px solid #2a2a2a; padding: 4px 10px; }
+    .card { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--border);
+      padding: 40px 40px 36px; animation: fadeUp 0.5s 0.1s ease both; }
+    .setup-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,214,0,0.1);
+      border: 1px solid rgba(255,214,0,0.3); color: var(--yellow); font-size: 0.65rem;
+      font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 5px 10px; margin-bottom: 16px; }
+    .card__title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em;
+      color: var(--white); margin-bottom: 8px; }
+    .card__sub { font-size: 0.8rem; color: var(--muted); font-weight: 500; line-height: 1.6;
+      margin-bottom: 32px; }
+    .error-msg { background: rgba(233,41,93,0.1); border: 1px solid rgba(233,41,93,0.35);
+      color: #ff6b8a; font-size: 0.8rem; font-weight: 600; padding: 10px 14px; margin-bottom: 24px; }
+    .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+    .field:last-of-type { margin-bottom: 28px; }
+    .field label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); }
+    .field input { background: var(--surface); border: 1px solid var(--border); color: var(--white);
+      font-size: 0.95rem; font-weight: 500; padding: 12px 14px; outline: none;
+      transition: border-color 0.18s; font-family: inherit; }
+    .field input:focus { border-color: var(--yellow); }
+    .field input::placeholder { color: #444; }
+    .field small { font-size: 0.7rem; color: #555; font-weight: 500; }
+    .btn-setup { width: 100%; background: var(--yellow); color: var(--black); border: none;
+      font-size: 0.8rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+      padding: 14px 24px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 10px; transition: background 0.18s; font-family: inherit; }
+    .btn-setup:hover { background: #e6c200; }
+    .btn-setup.is-loading { pointer-events: none; opacity: 0.7; }
+    .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .btn-setup.is-loading .spinner { display: block; }
+    .btn-setup.is-loading .btn-text { display: none; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="accent-bar"></div>
+  <main class="page">
+    <div class="brand">
+      <div class="brand__logo">
+        <span class="brand__num">24</span>
+        <span class="brand__fps">fps.</span>
+        <span class="brand__dot"></span>
+      </div>
+      <span class="brand__tag">Decode Animation Lab</span>
+    </div>
+
+    <div class="card">
+      <div class="setup-badge">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <circle cx="5" cy="5" r="4.5" stroke="currentColor" stroke-width="1"/>
+          <path d="M5 3v2.5l1.5 1.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+        </svg>
+        One-time setup
+      </div>
+      <h1 class="card__title">Create Admin Account</h1>
+      <p class="card__sub">
+        This page is only accessible once. After your account is created it will be permanently disabled.
+      </p>
+
+      {error && (
+        <div class="error-msg">
+          {error === 'mismatch'   ? 'Passwords do not match.' :
+           error === 'short'      ? 'Password must be at least 8 characters.' :
+           error === 'exists'     ? 'Setup already completed.' :
+           'Something went wrong. Try again.'}
+        </div>
+      )}
+
+      <form id="setupForm">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" placeholder="Choose a username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required />
+          <small>Minimum 8 characters</small>
+        </div>
+        <div class="field">
+          <label for="confirm">Confirm Password</label>
+          <input id="confirm" name="confirm" type="password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn-setup" id="submitBtn">
+          <span class="btn-text">Create Account</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('setupForm');
+    const btn  = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const pwd     = data.get('password');
+      const confirm = data.get('confirm');
+
+      if (pwd !== confirm) { window.location.href = '/admin/setup?error=mismatch'; return; }
+      if (pwd.length < 8)  { window.location.href = '/admin/setup?error=short'; return; }
+
+      btn.classList.add('is-loading');
+      const res = await fetch('/api/admin/setup', { method: 'POST', body: data });
+
+      if (res.ok) {
+        window.location.href = '/admin?setup=done';
+      } else {
+        const json = await res.json().catch(() => ({}));
+        window.location.href = `/admin/setup?error=${json.code || 'unknown'}`;
+      }
+    });
+  </script>
+</body>
+</html>
