@@ -2,8 +2,6 @@
 // src/pages/member-form.astro
 // 24fps Decode Animation Lab - Member Profile Submission Form
 // No Navbar or Footer - standalone page shared via WhatsApp link
-const SUPABASE_URL  = import.meta.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <html lang="en">
@@ -1171,8 +1169,10 @@ const SUPABASE_ANON = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   @media (max-width: 340px) { .deco { display: none; } }
 </style>
 
-<script define:vars={{ SUPABASE_URL, SUPABASE_ANON }}>
+<script>
   /* ── CONFIG ── */
+  const SUPABASE_URL  = 'https://nxhtannzwwrlgfgdxnvw.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54aHRhbm56d3dybGdmZ2R4bnZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4ODY3NzEsImV4cCI6MjA5NTQ2Mjc3MX0.aN5T5PgWQ4LyBU0iiGnZjxcyt6aIo3vnWfBDT3Xj_dY';
 
   const PLATFORMS = [
     { value: 'instagram',  label: 'Instagram',   placeholder: 'https://instagram.com/username',
