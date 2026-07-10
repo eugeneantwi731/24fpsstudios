@@ -1,4 +1,4 @@
-const password = 'your_password_here';
+const password = '24fpsstudios.com@2026';
 const encoder = new TextEncoder();
 const salt = crypto.getRandomValues(new Uint8Array(16));
 const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
