@@ -4,7 +4,7 @@ import { verifyPassword, generateSessionToken } from '../../../lib/auth';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const form = await request.formData();
   const username = form.get('username')?.toString().trim().toLowerCase();
   const password = form.get('password')?.toString();
@@ -15,7 +15,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 
-  const supabase = getAdminSupabase();
+  const runtimeEnv = (locals as any).runtime?.env;
+  const supabase = getAdminSupabase(runtimeEnv);
 
   const { data: user, error: fetchError } = await supabase
     .from('admin_users')

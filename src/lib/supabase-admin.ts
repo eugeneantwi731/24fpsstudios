@@ -1,17 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import type { APIRoute } from 'astro';
+import { getAdminSupabase } from '../../../lib/supabase-admin';
 
-export function getAdminSupabase() {
-  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? '';
-  const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+export const prerender = false;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error(`Missing Supabase config — URL: ${!!supabaseUrl}, KEY: ${!!serviceRoleKey}`);
+export const POST: APIRoute = async ({ cookies, redirect, locals }) => {
+  const token = cookies.get('admin_session')?.value;
+
+  if (token) {
+    const runtimeEnv = (locals as any).runtime?.env;
+    const supabase = getAdminSupabase(runtimeEnv);
+    await supabase.from('admin_sessions').delete().eq('token', token);
+    cookies.delete('admin_session', { path: '/' });
   }
 
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+  return redirect('/admin');
+};
