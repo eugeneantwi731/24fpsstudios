@@ -1,3 +1,7 @@
 name = "24fpsstudios"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-23"
+
+[vars]
+PUBLIC_SUPABASE_URL = "https://nxhtannzwwrlgfgdxnvw.supabase.co"
+PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54aHRhbm56d3dybGdmZ2R4bnZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4ODY3NzEsImV4cCI6MjA5NTQ2Mjc3MX0.aN5T5PgWQ4LyBU0iiGnZjxcyt6aIo3vnWfBDT3Xj_dY"
