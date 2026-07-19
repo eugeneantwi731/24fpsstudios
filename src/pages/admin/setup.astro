@@ -3,7 +3,8 @@ export const prerender = false;
 import { getAdminSupabase } from 'src/lib/supabase-admin';
 
 // If any admin users already exist, this page is closed
-const supabase = getAdminSupabase();
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
 const { count } = await supabase
   .from('admin_users')
   .select('*', { count: 'exact', head: true });

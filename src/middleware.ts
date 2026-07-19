@@ -33,7 +33,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect('/admin');
   }
 
-  const supabase = getAdminSupabase();
+  const runtimeEnv = (context.locals as any).runtime?.env;
+  const supabase = getAdminSupabase(runtimeEnv);
 
   const { data: session } = await supabase
     .from('admin_sessions')
