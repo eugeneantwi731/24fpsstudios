@@ -5,7 +5,8 @@ import { getAdminSupabase } from 'src/lib/supabase-admin';
 const token = Astro.cookies.get('admin_session')?.value;
 if (!token) return Astro.redirect('/admin');
 
-const supabase = getAdminSupabase();
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
 
 const { data: session } = await supabase
   .from('admin_sessions')
