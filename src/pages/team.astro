@@ -1,0 +1,149 @@
+---
+export const prerender = false;
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { createClient } from '@supabase/supabase-js';
+
+// Public read-only client — anon key only, no service role here.
+// RLS on the `members` table only allows SELECT where published =
+// true, so this can never leak unpublished or pending submissions
+// even if someone inspects the network tab.
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabaseUrl = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ?? import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const { data: members, error } = await supabase
+  .from('members')
+  .select('*')
+  .eq('published', true)
+  .order('name', { ascending: true });
+
+const allMembers = error || !members ? [] : members;
+
+const categories = ['faculty', 'alumni', 'student'];
+const categoryLabels: Record<string, string> = {
+  faculty: 'Faculty',
+  alumni: 'Alumni',
+  student: 'Students',
+};
+
+function membersByCategory(category: string) {
+  return allMembers.filter((m) => m.category === category);
+}
+
+function initialsFor(m: any) {
+  if (m.initials) return m.initials;
+  return (m.name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w: string) => w[0]?.toUpperCase())
+    .slice(0, 2)
+    .join('');
+}
+---
+
+<BaseLayout title="Team">
+  <main class="team-page">
+    <section class="team-hero">
+      <h1>Our Team</h1>
+      <p>The people behind 24fps — faculty, alumni, and the students building every production.</p>
+    </section>
+
+    {error && (
+      <p class="team-error">Couldn't load the team right now. Please try again shortly.</p>
+    )}
+
+    {!error && allMembers.length === 0 && (
+      <p class="team-empty">No published members yet.</p>
+    )}
+
+    {!error && allMembers.length > 0 && categories.map((category) => {
+      const list = membersByCategory(category);
+      if (list.length === 0) return null;
+
+      return (
+        <section class="team-section" id={category}>
+          <h2 class="team-section__title">{categoryLabels[category]}</h2>
+          <div class="team-grid">
+            {list.map((m) => (
+              <article class="team-card">
+                {m.photo_url ? (
+                  <img src={m.photo_url} alt={m.name} class="team-card__photo" loading="lazy" />
+                ) : (
+                  <div class="team-card__avatar">{initialsFor(m)}</div>
+                )}
+                <div class="team-card__name">{m.nickname || m.name}</div>
+                <div class="team-card__role">{m.role}</div>
+                {m.bio && <p class="team-card__bio">{m.bio}</p>}
+                <div class="team-card__links">
+                  {m.email && <a href={`mailto:${m.email}`}>Email</a>}
+                  {m.portfolio && <a href={m.portfolio} target="_blank" rel="noopener">Portfolio</a>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </main>
+</BaseLayout>
+
+<style>
+  .team-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 8rem 1.5rem 6rem;
+    font-family: 'Raleway', sans-serif;
+  }
+  .team-hero { text-align: center; margin-bottom: 4rem; }
+  .team-hero h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.75rem; }
+  .team-hero p { color: #888; max-width: 480px; margin: 0 auto; }
+
+  .team-error, .team-empty { text-align: center; color: #888; padding: 3rem 0; }
+
+  .team-section { margin-bottom: 4rem; }
+  .team-section__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.75rem;
+  }
+
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .team-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.4rem;
+  }
+
+  .team-card__photo,
+  .team-card__avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f2f2f2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #999;
+    font-size: 1.5rem;
+  }
+
+  .team-card__name { font-weight: 700; }
+  .team-card__role { font-size: 0.8rem; color: #888; }
+  .team-card__bio { font-size: 0.82rem; color: #666; margin-top: 0.5rem; line-height: 1.5; }
+  .team-card__links { display: flex; gap: 0.75rem; margin-top: 0.4rem; }
+  .team-card__links a { font-size: 0.75rem; text-decoration: underline; color: #333; }
+</style>

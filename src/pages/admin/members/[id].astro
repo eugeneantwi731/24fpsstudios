@@ -38,6 +38,21 @@ if (!member || error) return Astro.redirect('/admin/members');
 // Format socials
 const socials: Record<string, string> = member.socials || {};
 const expertise: string[] = Array.isArray(member.expertise) ? member.expertise : [];
+
+// Role gating — server has already enforced this on every API route;
+// this only controls what's shown in the UI so editors aren't shown
+// buttons for actions they can't perform.
+const role: 'admin' | 'editor' = (adminUser?.role ?? 'admin') as 'admin' | 'editor';
+const isAdmin = role === 'admin';
+
+// Is this submission currently published to the public members page?
+const { data: publishedRow } = await supabase
+  .from('members')
+  .select('id, published')
+  .eq('submission_id', id)
+  .maybeSingle();
+
+const isPublished = !!publishedRow?.published;
 ---
 
 <!DOCTYPE html>
@@ -601,25 +616,50 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
           <div class="action-card">
             <div class="action-card__title">Review Actions</div>
             <div class="action-btn-group">
-              <button class="action-btn action-btn--approve" id="btn-approve" onclick="updateStatus('approved')">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
-                Approve Submission
-              </button>
-              <button class="action-btn action-btn--reject" id="btn-reject" onclick="updateStatus('rejected')">
-                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                Reject Submission
-              </button>
-              {member.status !== 'pending' && (
-                <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  Reset to Pending
+              {isAdmin && (
+                <Fragment>
+                  <button class="action-btn action-btn--approve" id="btn-approve" onclick="updateStatus('approved')">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
+                    Approve Submission
+                  </button>
+                  <button class="action-btn action-btn--reject" id="btn-reject" onclick="updateStatus('rejected')">
+                    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Reject Submission
+                  </button>
+                  {member.status !== 'pending' && (
+                    <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
+                      <svg viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      Reset to Pending
+                    </button>
+                  )}
+                </Fragment>
+              )}
+
+              {member.status === 'approved' && (
+                <button
+                  class={`action-btn ${isPublished ? 'action-btn--restore' : 'action-btn--approve'}`}
+                  id="btn-publish"
+                  onclick={isPublished ? 'unpublishMember()' : 'publishMember()'}
+                >
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  {isPublished ? 'Unpublish from Members Page' : 'Make Public'}
                 </button>
               )}
-              <div class="action-divider"></div>
-              <button class="action-btn action-btn--delete" id="btn-delete" onclick="openDeleteModal()">
-                <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Delete Permanently
-              </button>
+              {isPublished && (
+                <div class="action-card__title" style="margin-top:0.4rem;color:#0a7e80;font-size:0.75rem;">
+                  ● Live on /members
+                </div>
+              )}
+
+              {isAdmin && (
+                <Fragment>
+                  <div class="action-divider"></div>
+                  <button class="action-btn action-btn--delete" id="btn-delete" onclick="openDeleteModal()">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Delete Permanently
+                  </button>
+                </Fragment>
+              )}
             </div>
           </div>
 
@@ -661,8 +701,12 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
 
 <script define:vars={{ memberId: member.id, memberName: member.name, initialExpertise: expertise, adminUsername: adminUser?.username ?? 'admin' }}>
   // ── CONFIG ──
-  const SUPABASE_URL  = import.meta.env.PUBLIC_SUPABASE_URL;
-  const SUPABASE_ANON = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  // All writes go through server-side /api/admin/members/:id/* routes,
+  // which check the admin_session cookie + role server-side using the
+  // service-role Supabase client. No Supabase keys are used from the
+  // browser anymore — this is what fixes Approve (and every other
+  // write on this page) silently failing under Row Level Security.
+  const API_BASE = `/api/admin/members/${memberId}`;
 
   // Track current expertise state
   let currentTags = [...initialExpertise];
@@ -683,30 +727,42 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
     setTimeout(() => toast.classList.remove('is-visible'), 3000);
   }
 
-  // ── SUPABASE PATCH ──
-  async function patchMember(fields) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify(fields),
+  // ── SERVER API HELPERS ──
+  // Throws with the server's error message on failure so callers can
+  // surface something more useful than a generic "failed" toast.
+  async function apiCall(path, options = {}) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
     });
-    if (!res.ok) throw new Error('Update failed');
+    let data = null;
+    try { data = await res.json(); } catch { /* no body */ }
+    if (!res.ok) {
+      throw new Error(data?.error || `Request failed (${res.status})`);
+    }
+    return data;
   }
 
-  // ── STATUS UPDATE ──
+  // Kept as the name other functions already call — now routes through
+  // the server /edit endpoint instead of patching Supabase directly.
+  async function patchMember(fields) {
+    const entries = Object.entries(fields);
+    for (const [field, value] of entries) {
+      await apiCall('/edit', {
+        method: 'PATCH',
+        body: JSON.stringify({ field, value }),
+      });
+    }
+  }
+
+  // ── STATUS UPDATE (admin-only server-side) ──
   async function updateStatus(newStatus) {
     const btns = document.querySelectorAll('.action-btn');
     btns.forEach(b => b.disabled = true);
     try {
-      await patchMember({
-        status: newStatus,
-        reviewed_by: adminUsername,
-        reviewed_at: new Date().toISOString(),
+      await apiCall('/status', {
+        method: 'POST',
+        body: JSON.stringify({ status: newStatus }),
       });
       // Update UI
       const badge = document.getElementById('status-badge-topbar');
@@ -718,12 +774,42 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
       }
       const msgMap = { approved: 'Submission approved!', rejected: 'Submission rejected.', pending: 'Reset to pending.' };
       showToast(msgMap[newStatus] || 'Status updated.');
-    } catch {
-      showToast('Failed to update status. Check connection.', 'error');
+      // Approve/reject/reset changes whether Publish should be shown —
+      // reload so the button set stays accurate.
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast(err.message || 'Failed to update status.', 'error');
     } finally {
       btns.forEach(b => b.disabled = false);
     }
   }
+
+  // ── PUBLISH / UNPUBLISH (admin or editor, server-side) ──
+  window.publishMember = async function() {
+    const btn = document.getElementById('btn-publish');
+    if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+    try {
+      await apiCall('/publish', { method: 'POST' });
+      showToast('Member is now live on the public page!');
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast(err.message || 'Failed to publish.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Make Public'; }
+    }
+  };
+
+  window.unpublishMember = async function() {
+    const btn = document.getElementById('btn-publish');
+    if (btn) { btn.disabled = true; btn.textContent = 'Unpublishing…'; }
+    try {
+      await apiCall('/publish', { method: 'DELETE' });
+      showToast('Member removed from the public page.');
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast(err.message || 'Failed to unpublish.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Unpublish from Members Page'; }
+    }
+  };
 
   // ── INLINE FIELD EDIT ──
   function startEdit(field, type) {
@@ -767,17 +853,10 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
       saveBtn.textContent = '…';
       saveBtn.disabled = true;
       try {
-        // Build edit log entry
-        const logEntry = { field, old_value: currentText, new_value: newVal, by: adminUsername, at: new Date().toISOString() };
-        // We need to fetch current edit_log first
-        const logRes = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}&select=edit_log`, {
-          headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
-        });
-        const logData = await logRes.json();
-        const currentLog = logData[0]?.edit_log || [];
-        currentLog.push(logEntry);
-
-        await patchMember({ [field]: newVal || null, edit_log: currentLog });
+        // Server builds and appends the edit_log entry (with the
+        // correct old_value straight from the DB) — no need to
+        // fetch/rebuild it client-side anymore.
+        await patchMember({ [field]: newVal || null });
 
         // Update display
         if (field === 'name') {
@@ -789,10 +868,10 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
         editToggle.style.display = '';
         wrap.remove();
         showToast(`${field} updated.`);
-      } catch {
+      } catch (err) {
         saveBtn.textContent = 'Save';
         saveBtn.disabled = false;
-        showToast('Save failed. Try again.', 'error');
+        showToast(err.message || 'Save failed. Try again.', 'error');
       }
     }
 
@@ -844,10 +923,10 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
         editToggle.style.display = '';
         wrap.remove();
         showToast(`Category updated to ${newVal}.`);
-      } catch {
+      } catch (err) {
         saveBtn.textContent = 'Save';
         saveBtn.disabled = false;
-        showToast('Save failed.', 'error');
+        showToast(err.message || 'Save failed.', 'error');
       }
     });
     select.addEventListener('keydown', (e) => { if (e.key === 'Escape') { valEl.style.display = ''; editToggle.style.display = ''; wrap.remove(); } });
@@ -895,8 +974,12 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
   // ── ADMIN NOTES ──
   window.saveNotes = async function() {
     const notes = document.getElementById('admin-notes').value;
-    try { await patchMember({ admin_notes: notes }); showToast('Notes saved.'); }
-    catch { showToast('Failed to save notes.', 'error'); }
+    try {
+      await apiCall('/notes', { method: 'POST', body: JSON.stringify({ notes }) });
+      showToast('Notes saved.');
+    } catch (err) {
+      showToast(err.message || 'Failed to save notes.', 'error');
+    }
   };
 
   // ── DELETE MODAL ──
@@ -912,43 +995,37 @@ const expertise: string[] = Array.isArray(member.expertise) ? member.expertise :
     btn.textContent = 'Deleting…';
     btn.disabled = true;
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/member_submissions?id=eq.${memberId}`, {
-        method: 'DELETE',
-        headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
-      });
-      if (!res.ok) throw new Error();
+      await apiCall('/delete', { method: 'POST' });
       window.location.href = '/admin/members';
-    } catch {
+    } catch (err) {
       btn.textContent = 'Yes, Delete';
       btn.disabled = false;
       document.getElementById('delete-modal').classList.remove('is-open');
-      showToast('Delete failed. Try again.', 'error');
+      showToast(err.message || 'Delete failed. Try again.', 'error');
     }
   });
 
   // ── PHOTO REPLACE ──
+  // Uploaded server-side now (service-role key), not with the anon
+  // key from the browser — same fix as everything else on this page.
   const photoInput = document.getElementById('photo-file-input');
   photoInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     showToast('Uploading photo…');
     try {
-      const slug = memberName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-      const path = `${Date.now()}-${slug}.jpg`;
-      const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/member-photos/${path}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${SUPABASE_ANON}`, 'Content-Type': file.type },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error('Upload failed');
-      const newUrl = `${SUPABASE_URL}/storage/v1/object/public/member-photos/${path}`;
-      await patchMember({ photo_url: newUrl });
-      // Update preview
+      const formData = new FormData();
+      formData.append('photo', file);
+      const res = await fetch(`${API_BASE}/photo`, { method: 'POST', body: formData });
+      let data = null;
+      try { data = await res.json(); } catch { /* no body */ }
+      if (!res.ok) throw new Error(data?.error || 'Upload failed');
+
       const preview = document.getElementById('photo-preview');
-      if (preview && preview.tagName === 'IMG') { preview.src = newUrl; }
+      if (preview && preview.tagName === 'IMG') { preview.src = data.photo_url; }
       showToast('Photo replaced!');
-    } catch {
-      showToast('Photo upload failed.', 'error');
+    } catch (err) {
+      showToast(err.message || 'Photo upload failed.', 'error');
     }
   });
 
