@@ -1,0 +1,333 @@
+---
+export const prerender = false;
+import { getAdminSupabase } from 'src/lib/supabase-admin';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
+
+// Validate session
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+// Sidebar badge counts
+const { count: pendingCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+
+// Category filter (faculty / alumni / student / all)
+const categoryFilter = Astro.url.searchParams.get('category') || 'all';
+const searchQuery = Astro.url.searchParams.get('q') || '';
+
+let query = supabase.from('members').select('*', { count: 'exact' }).eq('published', true);
+if (categoryFilter !== 'all') query = query.eq('category', categoryFilter);
+if (searchQuery) query = query.or(`name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,role.ilike.%${searchQuery}%`);
+query = query.order('published_at', { ascending: false });
+
+const { data: publishedMembers, count: publishedCount } = await query;
+const allMembers = publishedMembers || [];
+
+const { count: facultyCount } = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true).eq('category', 'faculty');
+const { count: alumniCount }  = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true).eq('category', 'alumni');
+const { count: studentCount } = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true).eq('category', 'student');
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #E9295D;
+      --teal:    #3FD3D5;
+      --yellow:  #FEC843;
+      --purple:  #9F6ACD;
+      --black:   #1A1A1A;
+      --white:   #FFFFFF;
+      --off:     #F8F5F5;
+      --muted:   #6B7280;
+      --border:  rgba(26,26,26,0.10);
+      --pink-light:   rgba(233,41,93,0.08);
+      --teal-light:   rgba(63,211,213,0.10);
+      --yellow-light: rgba(254,200,67,0.12);
+      --purple-light: rgba(159,106,205,0.10);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Raleway', sans-serif;
+      background: var(--off);
+      color: var(--black);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+
+    /* ── SIDEBAR (shared with dashboard/members) ── */
+    .sidebar { grid-row: 1 / -1; background: var(--white); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10; }
+    .sidebar__brand { padding: 28px 24px 20px; border-bottom: 1.5px solid var(--border); }
+    .sidebar__logo { display: flex; align-items: baseline; gap: 0; line-height: 1; margin-bottom: 4px; }
+    .sidebar__logo-num, .sidebar__logo-fps { font-size: 2rem; font-weight: 900; color: var(--black); letter-spacing: -0.03em; }
+    .sidebar__logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); margin-left: 2px; margin-bottom: 5px; flex-shrink: 0; align-self: flex-end; }
+    .sidebar__tag { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+    .sidebar__admin-badge { margin-top: 14px; display: flex; align-items: center; gap: 10px; background: var(--off); border-radius: 12px; padding: 10px 12px; }
+    .sidebar__avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .sidebar__admin-info { flex: 1; min-width: 0; }
+    .sidebar__admin-name { font-size: 0.82rem; font-weight: 800; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__admin-role { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); }
+    .sidebar__nav { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar__section-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 12px 8px 6px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; text-decoration: none; font-size: 0.84rem; font-weight: 700; color: var(--muted); transition: background 0.18s, color 0.18s; position: relative; }
+    .nav-item:hover { background: var(--off); color: var(--black); }
+    .nav-item.is-active { background: var(--pink-light); color: var(--pink); }
+    .nav-item__icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--off); transition: background 0.18s; }
+    .nav-item.is-active .nav-item__icon { background: rgba(233,41,93,0.12); }
+    .nav-item__icon svg { width: 16px; height: 16px; }
+    .nav-item__badge { margin-left: auto; background: var(--pink); color: white; font-size: 0.65rem; font-weight: 900; padding: 2px 7px; border-radius: 999px; min-width: 20px; text-align: center; }
+    .nav-item--coming { opacity: 0.45; pointer-events: none; }
+    .nav-item__soon { margin-left: auto; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--off); padding: 2px 6px; border-radius: 5px; }
+    .sidebar__footer { padding: 16px; border-top: 1.5px solid var(--border); }
+    .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: none; border: none; font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: background 0.18s, color 0.18s; }
+    .logout-btn:hover { background: rgba(233,41,93,0.06); color: var(--pink); }
+    .logout-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── TOPBAR ── */
+    .topbar { background: var(--white); border-bottom: 1.5px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .topbar__title { font-size: 1.1rem; font-weight: 900; letter-spacing: -0.01em; color: var(--black); }
+    .topbar__sub { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+    .topbar__actions { display: flex; align-items: center; gap: 10px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 7px; background: var(--pink); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 18px; border-radius: 999px; cursor: pointer; text-decoration: none; transition: background 0.18s, transform 0.12s, box-shadow 0.18s; box-shadow: 0 4px 14px rgba(233,41,93,0.25); }
+    .btn-primary:hover { background: #d4234f; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(233,41,93,0.35); }
+    .btn-primary svg { width: 14px; height: 14px; }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 7px; background: var(--white); color: var(--black); border: 1.5px solid var(--border); font-family: 'Raleway', sans-serif; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 10px 18px; border-radius: 999px; cursor: pointer; text-decoration: none; transition: all 0.18s; }
+    .btn-secondary:hover { border-color: var(--teal); color: #0a7e80; background: var(--teal-light); }
+    .btn-secondary svg { width: 14px; height: 14px; }
+
+    /* ── MAIN ── */
+    .main { padding: 28px 32px 48px; overflow-y: auto; }
+
+    .stat-strip { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-pill { background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; gap: 10px; }
+    .stat-pill__count { font-size: 1.1rem; font-weight: 900; }
+    .stat-pill__label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .category-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .cat-tab { padding: 8px 16px; border-radius: 999px; background: var(--white); border: 1.5px solid var(--border); font-size: 0.78rem; font-weight: 800; color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+    .cat-tab:hover { border-color: var(--pink); color: var(--pink); }
+    .cat-tab.is-active { background: var(--pink); color: white; border-color: var(--pink); }
+    .cat-tab__count { background: rgba(255,255,255,0.25); padding: 1px 7px; border-radius: 999px; font-size: 0.68rem; }
+    .cat-tab:not(.is-active) .cat-tab__count { background: var(--off); color: var(--muted); }
+
+    .search-bar { margin-bottom: 24px; }
+    .search-input-wrap { position: relative; max-width: 420px; }
+    .search-input-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); }
+    .search-input { width: 100%; padding: 11px 14px 11px 40px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.85rem; }
+    .search-input:focus { outline: none; border-color: var(--pink); }
+
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+    .member-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; transition: transform 0.18s, box-shadow 0.18s; text-decoration: none; color: inherit; display: block; }
+    .member-card:hover { transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.1); border-color: rgba(63,211,213,0.3); }
+    .member-card__top { padding: 24px 24px 18px; display: flex; align-items: flex-start; gap: 16px; }
+    .member-card__avatar { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: var(--off); }
+    .member-card__avatar-init { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--teal), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .member-card__info { flex: 1; min-width: 0; }
+    .member-card__name { font-size: 1.05rem; font-weight: 900; color: var(--black); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__role { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__email { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__badges { padding: 0 24px 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .cat-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .cat-badge--student  { background: var(--teal-light);   color: #0a7e80; }
+    .cat-badge--alumni   { background: var(--purple-light);  color: var(--purple); }
+    .cat-badge--faculty  { background: var(--yellow-light);  color: #8a6000; }
+    .live-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(63,211,213,0.12); color: #0a7e80; }
+    .live-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex-shrink: 0; }
+    .member-card__footer { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--off); }
+    .member-card__date { font-size: 0.7rem; font-weight: 500; color: var(--muted); }
+    .member-card__cta { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #0a7e80; display: flex; align-items: center; gap: 4px; }
+    .member-card__cta svg { width: 12px; height: 12px; }
+
+    .empty-state { text-align: center; padding: 80px 20px; }
+    .empty-state__icon { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: var(--teal-light); display: flex; align-items: center; justify-content: center; }
+    .empty-state__icon svg { width: 28px; height: 28px; color: var(--teal); }
+    .empty-state__title { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+    .empty-state__sub { font-size: 0.85rem; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">
+          <span class="sidebar__logo-num">24</span>
+          <span class="sidebar__logo-fps">fps.</span>
+          <span class="sidebar__logo-dot"></span>
+        </div>
+        <div class="sidebar__tag">Decode Animation Lab</div>
+        <div class="sidebar__admin-badge">
+          <div class="sidebar__avatar">{adminUser?.username?.slice(0,2) ?? 'AD'}</div>
+          <div class="sidebar__admin-info">
+            <div class="sidebar__admin-name">{adminUser?.username ?? 'Admin'}</div>
+            <div class="sidebar__admin-role">{adminUser?.role ?? 'admin'}</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar__nav">
+        <span class="sidebar__section-label">Overview</span>
+        <a href="/admin/dashboard" class="nav-item">
+          <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg></span>
+          Dashboard
+        </a>
+
+        <span class="sidebar__section-label">Members</span>
+        <a href="/admin/members" class="nav-item">
+          <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          All Members
+        </a>
+        <a href="/admin/members?status=pending" class="nav-item">
+          <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          Pending Review
+          {pendingCount && pendingCount > 0 && <span class="nav-item__badge">{pendingCount}</span>}
+        </a>
+
+        <span class="sidebar__section-label">Content</span>
+        <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
+        <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Events<span class="nav-item__soon">Soon</span></a>
+        <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Blog<span class="nav-item__soon">Soon</span></a>
+        <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M9 21V9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Gallery<span class="nav-item__soon">Soon</span></a>
+        <a href="/admin/team" class="nav-item is-active">
+          <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          Team
+          {publishedCount && publishedCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{publishedCount}</span>}
+        </a>
+
+        <span class="sidebar__section-label">System</span>
+        <a href="#" class="nav-item nav-item--coming">
+          <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/></svg></span>
+          Settings
+          <span class="nav-item__soon">Soon</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <form method="POST" action="/api/admin/logout">
+          <button type="submit" class="logout-btn">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sign Out
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div>
+        <div class="topbar__title">Team</div>
+        <div class="topbar__sub">{publishedCount ?? 0} member{publishedCount === 1 ? '' : 's'} live on the public site</div>
+      </div>
+      <div class="topbar__actions">
+        <a href="/team" target="_blank" rel="noopener" class="btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+          Preview Team
+        </a>
+        <a href="/admin/members?status=approved" class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Publish More
+        </a>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="stat-strip">
+        <div class="stat-pill"><span class="stat-pill__count">{publishedCount ?? 0}</span><span class="stat-pill__label">Total Live</span></div>
+        <div class="stat-pill"><span class="stat-pill__count">{facultyCount ?? 0}</span><span class="stat-pill__label">Faculty</span></div>
+        <div class="stat-pill"><span class="stat-pill__count">{alumniCount ?? 0}</span><span class="stat-pill__label">Alumni</span></div>
+        <div class="stat-pill"><span class="stat-pill__count">{studentCount ?? 0}</span><span class="stat-pill__label">Students</span></div>
+      </div>
+
+      <div class="category-tabs">
+        <a href="/admin/team" class={`cat-tab ${categoryFilter === 'all' ? 'is-active' : ''}`}>All <span class="cat-tab__count">{publishedCount ?? 0}</span></a>
+        <a href="/admin/team?category=faculty" class={`cat-tab ${categoryFilter === 'faculty' ? 'is-active' : ''}`}>Faculty <span class="cat-tab__count">{facultyCount ?? 0}</span></a>
+        <a href="/admin/team?category=alumni" class={`cat-tab ${categoryFilter === 'alumni' ? 'is-active' : ''}`}>Alumni <span class="cat-tab__count">{alumniCount ?? 0}</span></a>
+        <a href="/admin/team?category=student" class={`cat-tab ${categoryFilter === 'student' ? 'is-active' : ''}`}>Students <span class="cat-tab__count">{studentCount ?? 0}</span></a>
+      </div>
+
+      <form class="search-bar" method="GET" action="/admin/team">
+        <input type="hidden" name="category" value={categoryFilter} />
+        <div class="search-input-wrap">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input class="search-input" name="q" type="text" placeholder="Search live members by name, email, role…" value={searchQuery} />
+        </div>
+      </form>
+
+      {allMembers.length === 0 && (
+        <div class="empty-state">
+          <div class="empty-state__icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg>
+          </div>
+          <div class="empty-state__title">Nobody's live yet</div>
+          <div class="empty-state__sub">
+            {searchQuery ? `No results for "${searchQuery}".` : 'Approve a submission and hit "Make Public" to add them here.'}
+          </div>
+        </div>
+      )}
+
+      {allMembers.length > 0 && (
+        <div class="members-grid">
+          {allMembers.map((m: any, i: number) => (
+            <a href={`/admin/members/${m.submission_id ?? m.id}`} class="member-card" style={`animation-delay:${i * 0.03}s`}>
+              <div class="member-card__top">
+                {m.photo_url
+                  ? <img src={m.photo_url} alt={m.name} class="member-card__avatar" />
+                  : <div class="member-card__avatar-init">{(m.initials || m.name?.split(' ').map((w: string) => w[0]).slice(0,2).join('') || '??')}</div>
+                }
+                <div class="member-card__info">
+                  <div class="member-card__name">{m.name}</div>
+                  <div class="member-card__role">{m.role}{m.program ? ` · ${m.program}` : ''}</div>
+                  {m.email && <div class="member-card__email">{m.email}</div>}
+                </div>
+              </div>
+              <div class="member-card__badges">
+                <span class={`cat-badge cat-badge--${m.category}`}>{m.category}</span>
+                <span class="live-badge">Live</span>
+              </div>
+              <div class="member-card__footer">
+                <span class="member-card__date">Published {new Date(m.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span class="member-card__cta">Edit <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </main>
+  </div>
+</body>
+</html>

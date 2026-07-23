@@ -66,7 +66,7 @@ function initialsFor(m: any) {
           <h2 class="team-section__title">{categoryLabels[category]}</h2>
           <div class="team-grid">
             {list.map((m) => (
-              <article class="team-card">
+              <article class="team-card" id={m.slug}>
                 {m.photo_url ? (
                   <img src={m.photo_url} alt={m.name} class="team-card__photo" loading="lazy" />
                 ) : (
@@ -124,6 +124,15 @@ function initialsFor(m: any) {
     align-items: center;
     text-align: center;
     gap: 0.4rem;
+    scroll-margin-top: 120px;
+    border-radius: 12px;
+    transition: background 0.3s;
+  }
+
+  .team-card:target {
+    background: rgba(63,211,213,0.08);
+    box-shadow: 0 0 0 2px rgba(63,211,213,0.3);
+    padding: 1rem 0.5rem;
   }
 
   .team-card__photo,

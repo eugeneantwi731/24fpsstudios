@@ -50,6 +50,7 @@ const { count: pendingCount  } = await supabase.from('member_submissions').selec
 const { count: approvedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'approved');
 const { count: rejectedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'rejected');
 const { count: totalCount    } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true });
+const { count: publishedCount } = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true);
 
 const totalPages = Math.ceil((count || 0) / perPage);
 ---
@@ -145,18 +146,18 @@ const totalPages = Math.ceil((count || 0) / perPage);
     .status-tab:not(.is-active) .status-tab__count { background: var(--off); color: var(--muted); }
 
     /* MEMBERS GRID */
-    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 
     .member-card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; transition: transform 0.18s, box-shadow 0.18s; animation: fadeUp 0.35s ease both; text-decoration: none; color: inherit; display: block; }
     .member-card:hover { transform: translateY(-4px); box-shadow: 0 10px 32px rgba(0,0,0,0.1); border-color: rgba(233,41,93,0.2); }
 
-    .member-card__top { padding: 20px 20px 16px; display: flex; align-items: flex-start; gap: 14px; }
-    .member-card__avatar { width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex-shrink: 0; background: var(--off); }
-    .member-card__avatar-init { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .member-card__top { padding: 24px 24px 18px; display: flex; align-items: flex-start; gap: 16px; }
+    .member-card__avatar { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; flex-shrink: 0; background: var(--off); }
+    .member-card__avatar-init { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
     .member-card__info { flex: 1; min-width: 0; }
-    .member-card__name { font-size: 0.95rem; font-weight: 900; color: var(--black); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .member-card__role { font-size: 0.74rem; font-weight: 600; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .member-card__email { font-size: 0.7rem; font-weight: 500; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__name { font-size: 1.05rem; font-weight: 900; color: var(--black); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__role { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-card__email { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .member-card__badges { padding: 0 20px 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
@@ -248,6 +249,13 @@ const totalPages = Math.ceil((count || 0) / perPage);
       <span class="sidebar__section-label">Content</span>
       <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
       <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Events<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Blog<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Gallery<span class="nav-item__soon">Soon</span></a>
+      <a href="/admin/team" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Team
+        {publishedCount && publishedCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{publishedCount}</span>}
+      </a>
     </nav>
     <div class="sidebar__footer">
       <form method="POST" action="/api/admin/logout">
@@ -272,16 +280,16 @@ const totalPages = Math.ceil((count || 0) / perPage);
 
     <!-- STATUS TABS -->
     <div class="status-tabs">
-      <a href="/admin/members?category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'all' ? 'is-active' : ''}`}>
+      <a href={`/admin/members?category=${categoryFilter}&q=${searchQuery}`} class={`status-tab ${statusFilter === 'all' ? 'is-active' : ''}`}>
         All <span class="status-tab__count">{totalCount ?? 0}</span>
       </a>
-      <a href="/admin/members?status=pending&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'pending' ? 'is-active' : ''}`}>
+      <a href={`/admin/members?status=pending&category=${categoryFilter}&q=${searchQuery}`} class={`status-tab ${statusFilter === 'pending' ? 'is-active' : ''}`}>
         Pending <span class="status-tab__count">{pendingCount ?? 0}</span>
       </a>
-      <a href="/admin/members?status=approved&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'approved' ? 'is-active' : ''}`}>
+      <a href={`/admin/members?status=approved&category=${categoryFilter}&q=${searchQuery}`} class={`status-tab ${statusFilter === 'approved' ? 'is-active' : ''}`}>
         Approved <span class="status-tab__count">{approvedCount ?? 0}</span>
       </a>
-      <a href="/admin/members?status=rejected&category={categoryFilter}&q={searchQuery}" class={`status-tab ${statusFilter === 'rejected' ? 'is-active' : ''}`}>
+      <a href={`/admin/members?status=rejected&category=${categoryFilter}&q=${searchQuery}`} class={`status-tab ${statusFilter === 'rejected' ? 'is-active' : ''}`}>
         Rejected <span class="status-tab__count">{rejectedCount ?? 0}</span>
       </a>
     </div>
@@ -330,7 +338,7 @@ const totalPages = Math.ceil((count || 0) / perPage);
           </div>
           <div class="member-card__footer">
             <span class="member-card__date">{new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            <span class="member-card__cta">Review <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="member-card__cta">{m.status === 'approved' ? 'Edit' : 'Review'} <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
           </div>
         </a>
       )) : (

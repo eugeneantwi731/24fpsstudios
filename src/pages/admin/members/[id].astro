@@ -48,11 +48,16 @@ const isAdmin = role === 'admin';
 // Is this submission currently published to the public members page?
 const { data: publishedRow } = await supabase
   .from('members')
-  .select('id, published')
+  .select('id, published, slug')
   .eq('submission_id', id)
   .maybeSingle();
 
 const isPublished = !!publishedRow?.published;
+const publishedSlug = publishedRow?.slug ?? null;
+
+// Sidebar badge counts
+const { count: pendingCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+const { count: publishedCount } = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true);
 ---
 
 <!DOCTYPE html>
@@ -60,7 +65,7 @@ const isPublished = !!publishedRow?.published;
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{member.name} — Review — 24fps Admin</title>
+  <title>{member.name} — {member.status === 'approved' ? 'Edit' : 'Review'} — 24fps Admin</title>
   <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -216,6 +221,11 @@ const isPublished = !!publishedRow?.published;
     .photo-replace-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.18s; }
     .photo-replace-btn:hover { border-color: var(--pink); color: var(--pink); }
     .photo-replace-btn svg { width: 13px; height: 13px; }
+    .photo-download-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.18s; text-decoration: none; margin-left: 8px; }
+    .photo-download-btn:hover { border-color: var(--teal); color: #0a7e80; }
+    .photo-download-btn svg { width: 13px; height: 13px; }
+    .photo-download-btn--disabled { opacity: 0.4; pointer-events: none; }
+    .photo-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 4px; }
     #photo-file-input { display: none; }
 
     /* METADATA */
@@ -238,7 +248,7 @@ const isPublished = !!publishedRow?.published;
     .action-card__title { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
     .action-btn-group { display: flex; flex-direction: column; gap: 8px; }
 
-    .action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 16px; border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; border: none; cursor: pointer; transition: all 0.18s; }
+    .action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 16px; border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; border: none; cursor: pointer; transition: all 0.18s; text-decoration: none; box-sizing: border-box; }
     .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 
     .action-btn--approve { background: rgba(34,197,94,0.12); color: #166534; border: 1.5px solid rgba(34,197,94,0.25); }
@@ -249,7 +259,13 @@ const isPublished = !!publishedRow?.published;
     .action-btn--delete:hover  { background: #fef2f2; color: #b91c1c; border-color: #fca5a5; }
     .action-btn--restore { background: var(--yellow-light); color: #8a6000; border: 1.5px solid rgba(254,200,67,0.3); }
     .action-btn--restore:hover { background: var(--yellow); color: var(--black); border-color: var(--yellow); }
+    .action-btn--preview { background: var(--teal-light); color: #0a7e80; border: 1.5px solid rgba(63,211,213,0.3); }
+    .action-btn--preview:hover { background: var(--teal); color: white; border-color: var(--teal); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(63,211,213,0.3); }
+    .action-btn--disabled,
+    .action-btn--disabled:hover { opacity: 0.45; pointer-events: none; transform: none; box-shadow: none; background: var(--off); color: var(--muted); border-color: var(--border); }
     .action-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+    .action-card--danger { border-color: rgba(233,41,93,0.25); }
 
     .action-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
@@ -343,16 +359,25 @@ const isPublished = !!publishedRow?.published;
         Dashboard
       </a>
       <span class="sidebar__section-label">Members</span>
-      <a href="/admin/members" class="nav-item is-active">
+      <a href="/admin/members" class="nav-item">
         <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         All Members
       </a>
       <a href="/admin/members?status=pending" class="nav-item">
         <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
         Pending Review
+        {pendingCount && pendingCount > 0 && <span class="nav-item__badge">{pendingCount}</span>}
       </a>
       <span class="sidebar__section-label">Content</span>
       <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Events<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Blog<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Gallery<span class="nav-item__soon">Soon</span></a>
+      <a href="/admin/team" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Team
+        {publishedCount && publishedCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{publishedCount}</span>}
+      </a>
     </nav>
     <div class="sidebar__footer">
       <form method="POST" action="/api/admin/logout">
@@ -542,10 +567,23 @@ const isPublished = !!publishedRow?.published;
                   <div class="photo-url-label">Storage URL</div>
                   <div class="photo-url-text">{member.photo_url || 'No photo uploaded'}</div>
                   <input type="file" id="photo-file-input" accept="image/*" />
-                  <button class="photo-replace-btn" type="button" onclick="document.getElementById('photo-file-input').click()">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Replace Photo
-                  </button>
+                  <div class="photo-actions">
+                    <button class="photo-replace-btn" type="button" onclick="document.getElementById('photo-file-input').click()">
+                      <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      Replace Photo
+                    </button>
+                    <button
+                      type="button"
+                      id="photo-download-btn"
+                      class={`photo-download-btn ${!member.photo_url ? 'photo-download-btn--disabled' : ''}`}
+                      aria-disabled={!member.photo_url}
+                      disabled={!member.photo_url}
+                      title={member.photo_url ? 'Download this photo' : 'No photo to download'}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      <span id="photo-download-label">Download</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -614,9 +652,11 @@ const isPublished = !!publishedRow?.published;
 
           <!-- STATUS ACTIONS -->
           <div class="action-card">
-            <div class="action-card__title">Review Actions</div>
+            <div class="action-card__title">{member.status === 'approved' ? 'Publish Actions' : 'Review Actions'}</div>
             <div class="action-btn-group">
-              {isAdmin && (
+
+              {/* PENDING / REJECTED MODE — approve or reject a submission */}
+              {member.status !== 'approved' && isAdmin && (
                 <Fragment>
                   <button class="action-btn action-btn--approve" id="btn-approve" onclick="updateStatus('approved')">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/></svg>
@@ -626,37 +666,47 @@ const isPublished = !!publishedRow?.published;
                     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     Reject Submission
                   </button>
-                  {member.status !== 'pending' && (
-                    <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
-                      <svg viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                      Reset to Pending
-                    </button>
-                  )}
                 </Fragment>
               )}
 
+              {/* APPROVED MODE — publish/unpublish + preview + reset. No approve/reject here. */}
               {member.status === 'approved' && (
-                <button
-                  class={`action-btn ${isPublished ? 'action-btn--restore' : 'action-btn--approve'}`}
-                  id="btn-publish"
-                  onclick={isPublished ? 'unpublishMember()' : 'publishMember()'}
-                >
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  {isPublished ? 'Unpublish from Members Page' : 'Make Public'}
-                </button>
-              )}
-              {isPublished && (
-                <div class="action-card__title" style="margin-top:0.4rem;color:#0a7e80;font-size:0.75rem;">
-                  ● Live on /members
-                </div>
+                <Fragment>
+                  <button
+                    class={`action-btn ${isPublished ? 'action-btn--restore' : 'action-btn--approve'}`}
+                    id="btn-publish"
+                    onclick={isPublished ? 'unpublishMember()' : 'publishMember()'}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    {isPublished ? 'Unpublish from Team Page' : 'Make Public'}
+                  </button>
+
+                  <a
+                    href={isPublished ? `/team#${publishedSlug}` : undefined}
+                    target={isPublished ? '_blank' : undefined}
+                    rel={isPublished ? 'noopener' : undefined}
+                    class={`action-btn action-btn--preview ${!isPublished ? 'action-btn--disabled' : ''}`}
+                    aria-disabled={!isPublished}
+                    title={isPublished ? 'Open this member\'s public profile' : 'Publish this member first to preview their public profile'}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+                    Preview Member
+                  </a>
+
+                  {isPublished && (
+                    <div class="action-card__title" style="margin-top:0.2rem;color:#0a7e80;font-size:0.75rem;">
+                      ● Live on /team
+                    </div>
+                  )}
+                </Fragment>
               )}
 
               {isAdmin && (
                 <Fragment>
                   <div class="action-divider"></div>
-                  <button class="action-btn action-btn--delete" id="btn-delete" onclick="openDeleteModal()">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Delete Permanently
+                  <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Reset to Pending
                   </button>
                 </Fragment>
               )}
@@ -693,13 +743,27 @@ const isPublished = !!publishedRow?.published;
             </div>
           </div>
 
+          {isAdmin && (
+            <!-- DANGER ZONE — kept visually separate from routine actions -->
+            <div class="action-card action-card--danger">
+              <div class="action-card__title" style="color:var(--pink)">Danger Zone</div>
+              <p style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">
+                Permanently deletes this submission{isPublished ? ' and removes it from the public team page' : ''}. This cannot be undone.
+              </p>
+              <button class="action-btn action-btn--delete" id="btn-delete" onclick="openDeleteModal()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Delete Permanently
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </main>
   </div>
 </div>
 
-<script define:vars={{ memberId: member.id, memberName: member.name, initialExpertise: expertise, adminUsername: adminUser?.username ?? 'admin' }}>
+<script define:vars={{ memberId: member.id, memberName: member.name, initialExpertise: expertise, adminUsername: adminUser?.username ?? 'admin', initialPhotoUrl: member.photo_url ?? null }}>
   // ── CONFIG ──
   // All writes go through server-side /api/admin/members/:id/* routes,
   // which check the admin_session cookie + role server-side using the
@@ -756,7 +820,7 @@ const isPublished = !!publishedRow?.published;
   }
 
   // ── STATUS UPDATE (admin-only server-side) ──
-  async function updateStatus(newStatus) {
+  window.updateStatus = async function updateStatus(newStatus) {
     const btns = document.querySelectorAll('.action-btn');
     btns.forEach(b => b.disabled = true);
     try {
@@ -782,7 +846,7 @@ const isPublished = !!publishedRow?.published;
     } finally {
       btns.forEach(b => b.disabled = false);
     }
-  }
+  };
 
   // ── PUBLISH / UNPUBLISH (admin or editor, server-side) ──
   window.publishMember = async function() {
@@ -807,12 +871,12 @@ const isPublished = !!publishedRow?.published;
       setTimeout(() => window.location.reload(), 700);
     } catch (err) {
       showToast(err.message || 'Failed to unpublish.', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = 'Unpublish from Members Page'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Unpublish from Team Page'; }
     }
   };
 
   // ── INLINE FIELD EDIT ──
-  function startEdit(field, type) {
+  window.startEdit = function startEdit(field, type) {
     const row = document.getElementById(`row-${field}`);
     const valEl = document.getElementById(`val-${field}`);
     const currentText = valEl.textContent.trim();
@@ -880,7 +944,7 @@ const isPublished = !!publishedRow?.published;
   }
 
   // ── SELECT EDIT (for category) ──
-  function startSelectEdit(field, options) {
+  window.startSelectEdit = function startSelectEdit(field, options) {
     const row = document.getElementById(`row-${field}`);
     const valEl = document.getElementById(`val-${field}`);
     const catBadge = document.getElementById('cat-badge-display');
@@ -1008,6 +1072,7 @@ const isPublished = !!publishedRow?.published;
   // ── PHOTO REPLACE ──
   // Uploaded server-side now (service-role key), not with the anon
   // key from the browser — same fix as everything else on this page.
+  let currentPhotoUrl = initialPhotoUrl;
   const photoInput = document.getElementById('photo-file-input');
   photoInput?.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
@@ -1023,9 +1088,47 @@ const isPublished = !!publishedRow?.published;
 
       const preview = document.getElementById('photo-preview');
       if (preview && preview.tagName === 'IMG') { preview.src = data.photo_url; }
+      currentPhotoUrl = data.photo_url;
+      const downloadBtn = document.getElementById('photo-download-btn');
+      if (downloadBtn) { downloadBtn.disabled = false; downloadBtn.classList.remove('photo-download-btn--disabled'); }
       showToast('Photo replaced!');
     } catch (err) {
       showToast(err.message || 'Photo upload failed.', 'error');
+    }
+  });
+
+  // ── PHOTO DOWNLOAD ──
+  // Photos live on Supabase Storage (a different origin), so a plain
+  // <a download> won't force a download there — browsers only honor
+  // `download` for same-origin links. Fetching as a blob works
+  // cross-origin as long as the bucket allows public GET (it does,
+  // since these photo_urls are already public URLs).
+  document.getElementById('photo-download-btn')?.addEventListener('click', async () => {
+    if (!currentPhotoUrl) return;
+    const btn = document.getElementById('photo-download-btn');
+    const label = document.getElementById('photo-download-label');
+    const originalLabel = label ? label.textContent : 'Download';
+    if (label) label.textContent = 'Downloading…';
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(currentPhotoUrl);
+      if (!res.ok) throw new Error('Could not fetch photo');
+      const blob = await res.blob();
+      const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
+      const slug = (memberName || 'member').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `${slug}-photo.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      showToast('Download failed. Try opening the photo directly.', 'error');
+    } finally {
+      if (label) label.textContent = originalLabel;
+      if (btn) btn.disabled = false;
     }
   });
 
