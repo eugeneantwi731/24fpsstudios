@@ -72,8 +72,8 @@ const SOCIAL_ICONS: Record<string, string> = {
 <BaseLayout title="Team">
   <div class="team-page">
     <section class="team-hero">
-      <h1>Our Team</h1>
-      <p>The people behind 24fps — faculty, alumni, and the students building every production.</p>
+      <h1 class="team-hero__title">OUR<br/><span class="team-hero__title--pink">TEAM</span></h1>
+      <p class="team-hero__sub">The people behind 24fps — faculty, alumni, and the students building every production.</p>
     </section>
 
     {error && (
@@ -162,7 +162,7 @@ const SOCIAL_ICONS: Record<string, string> = {
      BaseLayout) rather than redefining a competing local palette.
      global.css doesn't have a --purple, so it's added here. */
   :root {
-    --purple: #B8A9D9; /* matches global.css's --lavender */
+    --purple: #9F6ACD; /* matches member-form.astro's --purple */
   }
 
   .team-page {
@@ -173,8 +173,23 @@ const SOCIAL_ICONS: Record<string, string> = {
   }
 
   .team-hero { text-align: center; margin-bottom: 4rem; }
-  .team-hero h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.75rem; color: var(--black); letter-spacing: -0.01em; }
-  .team-hero p { color: var(--grey); max-width: 480px; margin: 0 auto; font-size: 0.95rem; }
+  .team-hero__title {
+    font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--black);
+    margin-bottom: 16px;
+  }
+  .team-hero__title--pink { color: var(--pink); }
+  .team-hero__sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted, var(--grey));
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0 auto;
+  }
 
   .team-error, .team-empty { text-align: center; color: var(--grey); padding: 3rem 0; }
 
@@ -204,11 +219,22 @@ const SOCIAL_ICONS: Record<string, string> = {
     gap: 0;
     min-height: 240px;
     border-radius: 24px;
-    background: var(--white);
-    border: 1.5px solid rgba(26,26,26,0.08);
+
+    /* Same soft warm-white sheen as .navbar's own background —
+       no accent tint here; each card's color still shows up in
+       its glow, name, tags, icons and arrow below. */
+    background: linear-gradient(
+      to right,
+      #FCF8F8 0%,
+      #FFFFFF 25%,
+      #FFFFFF 75%,
+      #FCF8F8 100%
+    );
+
+    border: none;
     overflow: hidden;
     scroll-margin-top: 120px;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
   }
   .member-card:hover {
     transform: translateY(-3px);
@@ -216,6 +242,29 @@ const SOCIAL_ICONS: Record<string, string> = {
   }
   .member-card:target {
     box-shadow: 0 0 0 2px var(--card-accent, var(--pink));
+  }
+
+  /* Glass edge — same technique as .navbar::before: a bright-to-faded
+     white gradient masked down to a thin ring, giving that whitish
+     border look without any accent-color tint. */
+  .member-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    padding: 1.5px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.4) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 2;
   }
 
   /* Subtle animated glow bleeding from behind the card — deliberately
@@ -238,10 +287,10 @@ const SOCIAL_ICONS: Record<string, string> = {
     .member-card__glow { animation: none; }
   }
 
-  .member-card--pink   { --card-accent: var(--pink);   --card-hover: #A7284E; --card-accent-soft: rgba(233,41,93,0.16); border-color: rgba(233,41,93,0.16); }
-  .member-card--teal   { --card-accent: var(--teal);   --card-hover: #358B85; --card-accent-soft: rgba(63,211,213,0.18); border-color: rgba(63,211,213,0.18); }
-  .member-card--yellow { --card-accent: var(--yellow); --card-hover: #AB8C2E; --card-accent-soft: rgba(254,200,67,0.20); border-color: rgba(254,200,67,0.22); }
-  .member-card--purple { --card-accent: var(--purple); --card-hover: #84799C; --card-accent-soft: rgba(159,106,205,0.18); border-color: rgba(159,106,205,0.18); }
+  .member-card--pink   { --card-accent: var(--pink);   --card-hover: #A7284E; --card-accent-soft: rgba(233,41,93,0.16); }
+  .member-card--teal   { --card-accent: var(--teal);   --card-hover: #358B85; --card-accent-soft: rgba(63,211,213,0.18); }
+  .member-card--yellow { --card-accent: var(--yellow); --card-hover: #AB8C2E; --card-accent-soft: rgba(254,200,67,0.20); }
+  .member-card--purple { --card-accent: var(--purple); --card-hover: #84799C; --card-accent-soft: rgba(159,106,205,0.18); }
 
   .member-card--pink:hover   { box-shadow: 0 12px 32px rgba(233,41,93,0.18); }
   .member-card--teal:hover   { box-shadow: 0 12px 32px rgba(63,211,213,0.20); }

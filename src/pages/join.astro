@@ -1,0 +1,951 @@
+---
+// src/pages/join.astro
+// 24fps Decode Animation Lab - Join / Interest Form (prototype)
+// Collects interest from prospective members ahead of Friday's intro
+// session. Applicants are vetted by an administrator before they're
+// sent the official Member Profile Submission form.
+// PROTOTYPE: no Supabase table wired up yet — submit just reveals
+// the success state locally. Swap in a real insert once the table
+// (e.g. `join_submissions`) exists.
+// No Navbar or Footer - standalone page shared via WhatsApp link
+---
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join 24fps - Decode Animation Lab</title>
+  <meta property="og:title" content="Join 24fps - Decode Animation Lab" />
+  <meta property="og:description" content="Interested in joining 24fps? Tell us about yourself and we'll be in touch." />
+  <meta property="og:image" content="https://24fpsstudios.com/images/join-form-og.png" />
+  <meta property="og:url" content="https://24fpsstudios.com/join" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="icon" type="image/png" href="/images/24fps-favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- ── PAGE WRAPPER ── -->
+  <main class="page">
+
+    <!-- ── HERO ── -->
+    <header class="hero">
+      <img src="/images/film-strip.svg"           class="deco deco--film"      alt="" aria-hidden="true" />
+      <img src="/images/crown-scribble.svg"        class="deco deco--crown"     alt="" aria-hidden="true" />
+      <img src="/images/star-scribble-1.svg"       class="deco deco--star1"     alt="" aria-hidden="true" />
+      <img src="/images/star-scribble-2.svg"       class="deco deco--star2"     alt="" aria-hidden="true" />
+      <img src="/images/cross-scribble-1.svg"      class="deco deco--cross1"    alt="" aria-hidden="true" />
+      <img src="/images/line-scribble.svg"         class="deco deco--line"      alt="" aria-hidden="true" />
+      <div class="hero__inner" id="hero-inner">
+        <a href="/" class="hero__logo" aria-label="24fps Home">
+          <img src="/images/24fps-header-logo.svg" alt="24fps Decode Animation Lab" />
+        </a>
+
+        <div class="hero__title-wrap">
+          <h1 class="hero__title">
+            JOIN THE<br/>
+            <span class="hero__title--pink">24FPS CREW<img src="/images/three-sparks.svg" class="sparks-inline" alt="" aria-hidden="true" /></span>
+          </h1>
+        </div>
+
+        <p class="hero__sub">
+          We're introducing 24fps to new faces this Friday. Fill this in if you'd
+          like to be part of it - an administrator will reach out to vet you
+          before you're officially welcomed in.
+        </p>
+      </div>
+    </header>
+
+    <section class="form-wrap">
+      <form id="join-form" novalidate>
+
+        <!-- ══ SECTION 01: WHO THEY ARE ══ -->
+        <div class="section" id="sec-01">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--pink)">01</span>
+              <div class="section__title-wrap">
+                <div class="section__title-underline-wrap">
+                  <h2 class="section__title">Who They Are</h2>
+                  <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#E9295D"/></svg>
+                </div>
+                <p class="section__sub">Tell us the basics.</p>
+              </div>
+            </div>
+            <div class="section__icon-bg">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="8" r="4" stroke="var(--pink)" stroke-width="1.8"/>
+                <path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="fields fields--3">
+            <div class="field">
+              <label class="label" for="full-name">Full Name <span class="req">*</span></label>
+              <input class="input" id="full-name" name="full_name" type="text"
+                     placeholder="e.g. Ama Boateng" autocomplete="name" required />
+              <span class="err" id="err-full-name"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="email">Email Address <span class="req">*</span></label>
+              <input class="input" id="email" name="email" type="email"
+                     placeholder="e.g. ama@example.com" autocomplete="email" required />
+              <span class="err" id="err-email"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="phone">Phone / WhatsApp Number <span class="opt">optional</span></label>
+              <input class="input" id="phone" name="phone" type="tel"
+                     placeholder="e.g. +233 24 123 4567" autocomplete="tel" />
+              <span class="hint">Filling this in counts as consent to be contacted this way.</span>
+            </div>
+          </div>
+
+          <div class="fields fields--2" style="margin-top:16px">
+            <div class="field">
+              <label class="label" for="status-btn">Status <span class="req">*</span></label>
+              <div class="category-dd-wrap" id="status-dd-wrap">
+                <button type="button" class="input category-dd-trigger" id="status-btn"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span class="category-dd-label" id="status-dd-label">Student, Alumni or Non-student?</span>
+                  <svg class="category-dd-caret" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <ul class="category-dd-list" id="status-dd-list" role="listbox" style="display:none">
+                  <li class="category-dd-item" role="option" data-value="student">Student</li>
+                  <li class="category-dd-item" role="option" data-value="alumni">Alumni</li>
+                  <li class="category-dd-item" role="option" data-value="non-student">Non-student</li>
+                </ul>
+              </div>
+              <input type="hidden" id="status" name="status" required />
+              <span class="err" id="err-status"></span>
+            </div>
+            <div class="field" id="field-student-id" style="display:none">
+              <label class="label" for="student-id">Student ID / Program &amp; Year <span class="req">*</span></label>
+              <input class="input" id="student-id" name="student_id" type="text"
+                     placeholder="e.g. BCD/123456 - Communication Design, Level 300" />
+              <span class="err" id="err-student-id"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 02: WHY THEY WANT IN ══ -->
+        <div class="section" id="sec-02">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--teal)">02</span>
+              <div class="section__title-wrap">
+                <div class="section__title-underline-wrap">
+                  <h2 class="section__title">Why They Want In</h2>
+                  <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#3FD3D5"/></svg>
+                </div>
+                <p class="section__sub">What's pulling you toward us?</p>
+              </div>
+            </div>
+            <div class="section__icon-bg">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4 6 4c2.2 0 3.7 1.3 6 3.6C14.3 5.3 15.8 4 18 4c4 0 5.6 4 4 7.7-2.5 4.7-10 9.3-10 9.3z" stroke="var(--teal)" stroke-width="1.8" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="fields fields--2">
+            <div class="field">
+              <label class="label" for="why-join">Why do you want to join? <span class="req">*</span></label>
+              <textarea class="input textarea" id="why-join" name="why_join" rows="4"
+                        placeholder="Tell us what excites you about 24fps and what you hope to learn or contribute."></textarea>
+              <div class="char-count" id="why-join-count">0 / 300 words</div>
+              <span class="err" id="err-why-join"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="heard-about">How did you hear about us? <span class="req">*</span></label>
+              <div class="category-dd-wrap" id="heard-dd-wrap">
+                <button type="button" class="input category-dd-trigger" id="heard-btn"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span class="category-dd-label" id="heard-dd-label">Select an option</span>
+                  <svg class="category-dd-caret" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <ul class="category-dd-list" id="heard-dd-list" role="listbox" style="display:none">
+                  <li class="category-dd-item" role="option" data-value="word-of-mouth">Word of mouth</li>
+                  <li class="category-dd-item" role="option" data-value="poster">Poster / flyer</li>
+                  <li class="category-dd-item" role="option" data-value="social-media">Social media</li>
+                  <li class="category-dd-item" role="option" data-value="friend-referral">Friend referral</li>
+                  <li class="category-dd-item" role="option" data-value="other">Other</li>
+                </ul>
+              </div>
+              <input type="hidden" id="heard-about" name="heard_about" required />
+              <span class="err" id="err-heard-about"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 03: WHAT THEY BRING ══ -->
+        <div class="section" id="sec-03">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--yellow)">03</span>
+              <div class="section__title-wrap">
+                <div class="section__title-underline-wrap">
+                  <h2 class="section__title">What They Bring</h2>
+                  <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#FEC843"/></svg>
+                </div>
+                <p class="section__sub">Skills, experience, and proof of work.</p>
+              </div>
+            </div>
+            <div class="section__icon-bg">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.5.4.6 1 .6 1.6v.1h6v-.1c0-.6.1-1.2.6-1.6A6 6 0 0 0 12 3z" stroke="var(--yellow)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <p class="section__instructions">
+            Add your skills or interests. Type one and press Enter to add.<br/>
+            <strong>* At least one is required.</strong>
+          </p>
+          <div class="tag-input-wrap" id="tag-wrap">
+            <div class="tag-input-row">
+              <input class="input tag-input" id="skills-text" type="text"
+                     placeholder="e.g. Animation, 3D, VFX, Sound, Writing…" autocomplete="off" />
+              <button type="button" class="add-tag-btn" id="add-tag-btn" aria-label="Add skill">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                Add
+              </button>
+            </div>
+            <div class="tags-list" id="tags-list"></div>
+          </div>
+          <span class="err" id="err-skills"></span>
+          <input type="hidden" id="skills-hidden" name="skills" />
+
+          <div class="fields fields--2" style="margin-top:20px">
+            <div class="field">
+              <label class="label" for="experience-btn">Experience Level <span class="opt">optional</span></label>
+              <div class="category-dd-wrap" id="experience-dd-wrap">
+                <button type="button" class="input category-dd-trigger" id="experience-btn"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span class="category-dd-label" id="experience-dd-label">Select a level</span>
+                  <svg class="category-dd-caret" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <ul class="category-dd-list" id="experience-dd-list" role="listbox" style="display:none">
+                  <li class="category-dd-item" role="option" data-value="beginner">Beginner</li>
+                  <li class="category-dd-item" role="option" data-value="some-experience">Some experience</li>
+                  <li class="category-dd-item" role="option" data-value="experienced">Experienced</li>
+                </ul>
+              </div>
+              <input type="hidden" id="experience" name="experience" />
+            </div>
+            <div class="field">
+              <label class="label" for="portfolio">Portfolio or work sample link <span class="opt">optional</span></label>
+              <input class="input" id="portfolio" name="portfolio" type="url"
+                     placeholder="e.g. behance.net/yourprofile or drive link" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SECTION 04: CONSENT ══ -->
+        <div class="section" id="sec-04">
+          <div class="section__head">
+            <div class="section__head-left">
+              <span class="section__num" style="--clr: var(--purple)">04</span>
+              <div class="section__title-wrap">
+                <div class="section__title-underline-wrap">
+                  <h2 class="section__title">Consent</h2>
+                  <svg class="section__title-underline" viewBox="0 0 70.82 4.26" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M1.23 4.26c-1.11,0.11 -2.41,-2 0.49,-2.29 16.96,-1.66 44.64,-2.65 62.25,-1.38 0.87,0.06 6.9,0.29 6.84,1.21 -0.05,0.85 -5.65,0.51 -6.49,0.51 -8.2,-0.08 -14.21,-0.26 -22.66,-0.11 -13,0.24 -27.49,0.71 -40.44,2.06z" fill="#9F6ACD"/></svg>
+                </div>
+                <p class="section__sub">Before you send this off.</p>
+              </div>
+            </div>
+            <div class="section__icon-bg">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke="var(--purple)" stroke-width="1.8" stroke-linejoin="round"/>
+                <path d="M9.5 12.2l1.8 1.8 3.3-3.6" stroke="var(--purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <label class="consent-check" for="consent-checkbox">
+            <input type="checkbox" id="consent-checkbox" name="consent" required />
+            <span class="consent-check__box" aria-hidden="true">
+              <svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.2 3.2L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="consent-check__label">
+              I agree to be contacted by the 24fps Decode Animation Lab team for vetting and interview before acceptance.
+            </span>
+          </label>
+          <span class="err" id="err-consent"></span>
+        </div>
+
+        <!-- ══ SUBMIT ══ -->
+        <div class="submit-strip">
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <span class="submit-btn__label">Submit Application</span>
+            <svg viewBox="0 0 20 20" fill="none" class="submit-btn__icon"><path d="M3 10h14M11 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- ══ SUCCESS STATE ══ -->
+      <div class="success-state" id="success-state" style="display:none">
+        <div class="success-card" id="success-card">
+
+          <div class="success-check-wrap">
+            <svg class="success-check-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85.06 85.04" aria-hidden="true">
+              <ellipse class="success-check-bg" cx="42.53" cy="42.52" rx="42.53" ry="42.52"/>
+              <polyline
+                class="success-check-tick"
+                fill="none"
+                stroke="white"
+                stroke-width="10.63"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-miterlimit="2.61313"
+                points="20.39,42.84 34.94,57.39 64.67,27.66"
+              />
+            </svg>
+          </div>
+
+          <div class="success-title-wrap">
+            <h2 class="success-title">
+              <span class="success-title--pink">SUBMITTED!</span>
+            </h2>
+            <svg class="success-underline" viewBox="0 0 172 6" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M2 5.2c-0.9 0.08 -1.9,-1.6 0.4,-1.85 13.5,-1.32 70,-2.1 155,-1.1 0.69 0.05 5.45 0.23 5.4 0.96 -0.04 0.68 -4.46 0.41 -5.12 0.41 -6.47,-0.06 -11.2,-0.2 -17.87,-0.09 -10.25 0.19 -21.68 0.57 -31.9 1.64z" fill="#9F6ACD"/>
+            </svg>
+          </div>
+
+          <p class="success-text">
+            An administrator will contact you soon for the next steps.<br/><br/>
+            Thank you for your interest in joining <span class="success-brand">24fps</span> Decode Animation Lab.
+            Our team will review your application and reach out to you before Friday's session.
+          </p>
+
+          <a href="/" class="success-btn">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M3 10l7-7 7 7M5 8.5V17h10V8.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to Home
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+      <img src="/images/cross-scribble-2.svg"     class="deco deco--cross2"    alt="" aria-hidden="true" />
+      <img src="/images/star-line-scribble.svg"   class="deco deco--starline"  alt="" aria-hidden="true" />
+      <img src="/images/comic-shade.svg"           class="deco deco--comicshade" alt="" aria-hidden="true" />
+      <img src="/images/24fps-footer-logo.svg" alt="24fps Decode Animation Lab" class="footer-logo" />
+    </footer>
+
+  </main>
+
+</body>
+</html>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink:   #E9295D;
+    --teal:   #3FD3D5;
+    --yellow: #FEC843;
+    --purple: #9F6ACD;
+    --black:  #1A1A1A;
+    --white:  #FFFFFF;
+    --off:    #F8F5F5;
+    --muted:  #6B7280;
+    --border: rgba(26,26,26,0.12);
+    --tag0: var(--pink);
+    --tag1: var(--teal);
+    --tag2: var(--yellow);
+    --tag3: var(--purple);
+  }
+
+  body {
+    font-family: 'Raleway', sans-serif;
+    background: var(--off);
+    color: var(--black);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { min-height: 100vh; position: relative; }
+
+  .hero {
+    position: relative;
+    padding: 64px 24px 72px;
+    background: transparent;
+    text-align: center;
+  }
+
+  .hero__inner {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero__logo { display: block; margin-bottom: 24px; }
+  .hero__logo img { height: clamp(60px, 12vw, 100px); width: auto; display: block; margin: 0 auto; }
+
+  .hero__title {
+    font-size: clamp(2.4rem, 5.5vw, 3.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--black);
+    margin-bottom: 16px;
+  }
+  .hero__title--pink { color: var(--pink); position: relative; }
+  .sparks-inline { position: absolute; width: 0.5em; right: -1.1em; top: -0.2em; }
+
+  .hero__sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .deco { position: absolute; pointer-events: none; z-index: 0; }
+  .deco--film   { width: clamp(180px, 35vw, 400px); top: 0;    right: 0; }
+  .deco--crown  { width: clamp(44px,  8vw,  90px);  top: 40px; left: 25%; }
+  .deco--cross1 { width: clamp(18px,  3vw,  36px);  top: 100px; right: 32%; }
+  .deco--star1  { width: clamp(28px,  5vw,  60px);  top: 200px; left: 16%; }
+  .deco--star2  { width: clamp(36px,  6vw,  80px);  top: 300px; right: 18%; }
+  .deco--line   { width: clamp(40px,  7vw,  80px);  top: 360px; left: 10%; }
+  .deco--cross2   { width: clamp(20px, 3.5vw, 38px); top: 24px; left: 26%; }
+  .deco--starline { width: clamp(70px, 12vw, 140px); top: 20px; right: 24%; z-index: 1; }
+  .deco--comicshade { width: 300px; bottom: -100px; left: -100px; top: auto; z-index: 0; opacity: 0.55; }
+
+  .form-wrap { max-width: 1100px; margin: 0 auto; padding: 0 40px 80px; position: relative; }
+
+  .section {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 36px 40px;
+    margin-top: 20px;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    animation: sectionIn 0.45s ease both;
+    transition: box-shadow 0.4s ease;
+  }
+
+  .section:nth-of-type(1) { z-index: 4; }
+  .section:nth-of-type(2) { z-index: 3; }
+  .section:nth-of-type(3) { z-index: 2; }
+  .section:nth-of-type(4) { z-index: 1; }
+  .section:focus-within   { z-index: 10; }
+
+  #sec-01 { border: 1.5px solid rgba(233,41,93,0.18); }
+  #sec-02 { border: 1.5px solid rgba(63,211,213,0.18); }
+  #sec-03 { border: 1.5px solid rgba(254,200,67,0.25); }
+  #sec-04 { border: 1.5px solid rgba(159,106,205,0.18); }
+
+  #sec-01:focus-within { box-shadow: 0 4px 32px rgba(233,41,93,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-02:focus-within { box-shadow: 0 4px 32px rgba(63,211,213,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-03:focus-within { box-shadow: 0 4px 32px rgba(254,200,67,0.28), 0 1px 4px rgba(0,0,0,0.04); }
+  #sec-04:focus-within { box-shadow: 0 4px 32px rgba(159,106,205,0.22), 0 1px 4px rgba(0,0,0,0.04); }
+
+  @keyframes sectionIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+  .section__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 24px; }
+  .section__head-left { display: flex; align-items: flex-start; gap: 14px; flex: 1; }
+
+  .section__num {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+    background: var(--clr, var(--pink));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 900; letter-spacing: 0.04em; color: #fff;
+  }
+
+  .section__icon-bg { flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; margin-top: -8px; }
+  .section__icon-bg svg { width: 40px; height: 40px; }
+
+  .section__title-wrap { display: inline-flex; flex-direction: column; gap: 1px; }
+  .section__title { font-size: 1.25rem; font-weight: 900; color: var(--black); letter-spacing: 0.04em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; line-height: 1.2; }
+  .section__title-underline-wrap { display: inline-flex; flex-direction: column; width: fit-content; }
+  .section__title-underline { display: block; width: 100%; height: 5px; margin-top: -2px; flex-shrink: 0; }
+  .section__sub { font-size: 0.82rem; font-weight: 500; color: var(--muted); margin-top: 4px; }
+
+  .section__instructions {
+    font-size: 0.84rem; font-weight: 500; color: var(--muted); line-height: 1.6; margin-bottom: 16px;
+    background: color-mix(in srgb, var(--sec-clr, var(--pink)) 14%, transparent);
+    padding: 10px 14px; border-radius: 10px;
+  }
+  .section__instructions strong { color: var(--black); }
+
+  .fields { display: grid; gap: 16px; }
+  .fields--2 { grid-template-columns: 1fr 1fr; }
+  .fields--3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .label { font-size: 0.92rem; font-weight: 700; letter-spacing: 0.04em; color: var(--black); }
+  .req { color: var(--pink); font-size: 1rem; font-weight: 800; }
+  .opt { font-size: 0.72rem; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; margin-left: 4px; }
+
+  .input {
+    width: 100%; font-family: 'Raleway', sans-serif; font-size: 0.9rem; font-weight: 500;
+    color: var(--black); background: var(--off); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 11px 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; appearance: none;
+  }
+  .input:focus { border-color: var(--sec-clr, var(--pink)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sec-clr, var(--pink)) 15%, transparent); background: var(--white); }
+  .input.is-error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+
+  #sec-01 { --sec-clr: var(--pink); }
+  #sec-02 { --sec-clr: var(--teal); }
+  #sec-03 { --sec-clr: var(--yellow); }
+  #sec-04 { --sec-clr: var(--purple); }
+
+  .textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+  .char-count { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-align: right; }
+  .char-count.over { color: #ef4444; }
+
+  .category-dd-wrap { position: relative; width: 100%; }
+  .category-dd-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; text-align: left; font-weight: 600; color: var(--muted); }
+  .category-dd-trigger.has-value { color: var(--black); }
+  .category-dd-trigger:hover, .category-dd-trigger.is-open { border-color: var(--sec-clr, var(--teal)); background: var(--white); }
+  .category-dd-trigger:focus { outline: none; }
+  .category-dd-label { flex: 1; }
+  .category-dd-caret { width: 16px; height: 16px; flex-shrink: 0; color: var(--muted); transition: transform 0.2s; }
+  .category-dd-trigger.is-open .category-dd-caret { transform: rotate(180deg); }
+  .category-dd-list { position: absolute; top: calc(100% + 6px); left: 0; width: 100%; background: var(--white); border: 1.5px solid rgba(63,211,213,0.35); border-radius: 13px; box-shadow: 0 8px 28px rgba(0,0,0,0.12); z-index: 100; list-style: none; padding: 6px; overflow: hidden; }
+  .category-dd-item { padding: 10px 12px; border-radius: 8px; font-family: 'Raleway', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--black); cursor: pointer; transition: background 0.15s; }
+  .category-dd-item:hover { background: rgba(63,211,213,0.1); }
+  .category-dd-item.is-selected { background: rgba(63,211,213,0.14); }
+
+  .hint { font-size: 0.73rem; font-weight: 500; color: var(--muted); line-height: 1.4; }
+  .err { font-size: 0.73rem; font-weight: 600; color: #ef4444; display: block; }
+  .err:empty { display: none; }
+
+  .tag-input-wrap { display: flex; flex-direction: column; gap: 14px; }
+  .tag-input-row { display: flex; gap: 0; align-items: center; background: var(--off); border: 1.5px solid var(--border); border-radius: 14px; padding: 5px 5px 5px 0; transition: border-color 0.2s, box-shadow 0.2s; }
+  .tag-input-row:focus-within { border-color: var(--yellow); box-shadow: 0 0 0 3px rgba(254,200,67,0.15); background: var(--white); }
+  .tag-input { flex: 1; background: transparent; border: none !important; box-shadow: none !important; border-radius: 0; padding: 10px 16px; font-size: 0.92rem; }
+  .tag-input:focus { border-color: transparent !important; box-shadow: none !important; background: transparent !important; }
+
+  .add-tag-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; background: var(--yellow); color: var(--white); font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; white-space: nowrap; }
+  .add-tag-btn:hover { box-shadow: 0 0 0 3px rgba(254,200,67,0.35), 0 2px 10px rgba(254,200,67,0.45); }
+  .add-tag-btn svg { width: 14px; height: 14px; stroke: var(--white); }
+
+  .tags-list { display: flex; flex-wrap: wrap; gap: 10px; min-height: 0; }
+
+  .tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 16px; border-radius: 999px; font-size: 0.88rem; font-weight: 700; letter-spacing: 0.01em; border: none; animation: tagPop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes tagPop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .tag[data-ci="0"] { background: #FFCCD9; color: #C41E4A; }
+  .tag[data-ci="1"] { background: #C4F2F2; color: #0A7E80; }
+  .tag[data-ci="2"] { background: #FFF0B3; color: #8A6000; }
+  .tag[data-ci="3"] { background: #E8D5F5; color: #6A35A8; }
+  .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: rgba(0,0,0,0.12); border: none; border-radius: 50%; color: inherit; cursor: pointer; padding: 0; }
+  .tag-remove svg { width: 8px; height: 8px; }
+
+  /* ── CONSENT CHECKBOX ── */
+  .consent-check { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+  .consent-check input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .consent-check__box {
+    flex-shrink: 0; width: 22px; height: 22px; margin-top: 1px; border-radius: 6px;
+    border: 1.8px solid var(--border); background: var(--off);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .consent-check__box svg { width: 12px; height: 10px; opacity: 0; transition: opacity 0.15s; }
+  .consent-check input:checked ~ .consent-check__box { background: var(--pink); border-color: var(--pink); }
+  .consent-check input:checked ~ .consent-check__box svg { opacity: 1; }
+  .consent-check input:focus-visible ~ .consent-check__box { box-shadow: 0 0 0 3px rgba(233,41,93,0.2); }
+  .consent-check__label { font-size: 0.86rem; font-weight: 500; color: var(--black); line-height: 1.6; }
+
+  /* ── SUBMIT ── */
+  .submit-strip { display: flex; justify-content: center; margin-top: 36px; }
+  .submit-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--pink); color: white; font-family: 'Raleway', sans-serif; font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; padding: 15px 34px; border: none; border-radius: 999px; cursor: pointer; box-shadow: 0 4px 20px rgba(233,41,93,0.4); transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(233,41,93,0.45); }
+  .submit-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
+  .submit-btn__icon { width: 16px; height: 16px; }
+
+  /* ── SUCCESS STATE ── */
+  .success-state {
+    margin-top: 60px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .success-state.is-visible { opacity: 1; transform: translateY(0); }
+
+  .success-card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 48px 48px 52px;
+    text-align: center;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.06);
+    position: relative;
+    z-index: 2;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .success-check-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 88px;
+    height: 88px;
+    filter: drop-shadow(0 6px 16px rgba(63,211,213,0.35));
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .success-check-svg { width: 88px; height: 88px; overflow: visible; }
+
+  .success-check-bg {
+    fill: var(--teal);
+    transform-origin: 42.53px 42.52px;
+    transform: scale(0);
+  }
+  .success-state.is-visible .success-check-bg {
+    animation: checkPop 0.45s 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  @keyframes checkPop { to { transform: scale(1); } }
+
+  .success-check-tick {
+    stroke-dasharray: 80;
+    stroke-dashoffset: 80;
+  }
+  .success-state.is-visible .success-check-tick {
+    animation: drawTick 0.4s 0.75s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes drawTick { to { stroke-dashoffset: 0; } }
+
+  .success-title-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-title-wrap { animation: fadeUp 0.4s 1s ease forwards; }
+
+  .success-title {
+    font-size: clamp(1.9rem, 5.5vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    color: var(--black);
+    text-transform: uppercase;
+  }
+  .success-title--pink { color: var(--pink); }
+
+  .success-underline {
+    display: block;
+    width: clamp(140px, 70%, 340px);
+    height: 10px;
+    margin-top: 6px;
+    margin-left: 20px;
+  }
+
+  .success-text {
+    font-size: clamp(0.87rem, 2vw, 0.97rem);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.75;
+    max-width: 440px;
+    margin: 22px auto 32px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-text { animation: fadeUp 0.4s 1.15s ease forwards; }
+  .success-brand { color: var(--pink); font-weight: 800; }
+
+  .success-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: 2px solid var(--pink);
+    color: var(--pink);
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    padding: 13px 32px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s, transform 0.15s, box-shadow 0.2s;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .success-state.is-visible .success-btn { animation: fadeUp 0.4s 1.3s ease forwards; }
+  .success-btn:hover {
+    background: var(--pink);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(233,41,93,0.35);
+  }
+  .success-btn svg { width: 16px; height: 16px; }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  /* ── FOOTER ── */
+  .site-footer { position: relative; padding: 56px 24px 40px; display: flex; justify-content: center; overflow: hidden; }
+  .footer-logo { height: 52px; width: auto; position: relative; z-index: 2; }
+
+  @media (max-width: 680px) {
+    .hero { padding: 48px 20px 56px; }
+    .section { padding: 28px 22px; }
+    .fields--2, .fields--3 { grid-template-columns: 1fr; }
+    .submit-strip { padding: 0 22px; }
+    .section__icon-bg { width: 48px; height: 48px; margin-top: 0; }
+    .section__icon-bg svg { width: 30px; height: 30px; }
+    .form-wrap { padding: 0 16px 60px; }
+    .section__title { font-size: 1.05rem; }
+    .deco--comicshade { width: 200px; bottom: -70px; left: -70px; }
+    .site-footer { padding: 40px 24px 32px; }
+    .footer-logo { height: 42px; }
+    .success-card { padding: 32px 24px 40px; border-radius: 22px; }
+  }
+
+  @media (max-width: 400px) {
+    .section { padding: 22px 16px; }
+    .form-wrap { padding: 0 12px 60px; }
+    .section__icon-bg { width: 40px; height: 40px; }
+    .section__icon-bg svg { width: 24px; height: 24px; }
+    .section__title { font-size: 0.95rem; }
+    .deco--comicshade { width: 150px; bottom: -50px; left: -50px; }
+  }
+
+  @media (max-width: 340px) { .deco { display: none; } }
+</style>
+
+<script>
+  const TAG_COLORS = 4;
+  let skills: string[] = [];
+
+  function escapeHtml(str: string) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function v(id: string) {
+    return (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement)?.value?.trim() || '';
+  }
+
+  function setError(fieldId: string, errId: string, msg: string) {
+    const field = document.getElementById(fieldId);
+    const err = document.getElementById(errId);
+    if (field) field.classList.toggle('is-error', !!msg);
+    if (err) err.textContent = msg;
+  }
+
+  /* ── GENERIC DROPDOWN BUILDER ── */
+  function initDropdown(prefix: string, hiddenId: string, onSelect?: (val: string) => void) {
+    const trigger = document.getElementById(`${prefix}-btn`);
+    const list = document.getElementById(`${prefix}-dd-list`);
+    const label = document.getElementById(`${prefix}-dd-label`);
+    const hidden = document.getElementById(hiddenId) as HTMLInputElement;
+    if (!trigger || !list || !label || !hidden) return;
+
+    trigger.addEventListener('click', () => {
+      const isOpen = trigger.classList.contains('is-open');
+      // close any other open dropdowns
+      document.querySelectorAll('.category-dd-trigger.is-open').forEach(t => {
+        if (t !== trigger) {
+          t.classList.remove('is-open');
+          t.setAttribute('aria-expanded', 'false');
+          const l = t.parentElement?.querySelector('.category-dd-list') as HTMLElement;
+          if (l) l.style.display = 'none';
+        }
+      });
+      if (isOpen) {
+        trigger.classList.remove('is-open');
+        (list as HTMLElement).style.display = 'none';
+        trigger.setAttribute('aria-expanded', 'false');
+      } else {
+        trigger.classList.add('is-open');
+        (list as HTMLElement).style.display = 'block';
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+    });
+
+    list.querySelectorAll('.category-dd-item').forEach(item => {
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const val = (item as HTMLElement).dataset.value || '';
+        hidden.value = val;
+        label.textContent = item.textContent?.trim() || '';
+        trigger.classList.add('has-value');
+        (list as HTMLElement).style.display = 'none';
+        trigger.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        list.querySelectorAll('.category-dd-item').forEach(i => i.classList.remove('is-selected'));
+        item.classList.add('is-selected');
+        trigger.classList.remove('is-error');
+        const errEl = document.getElementById(`err-${hiddenId}`);
+        if (errEl) errEl.textContent = '';
+        if (onSelect) onSelect(val);
+      });
+    });
+
+    document.addEventListener('click', e => {
+      const wrap = trigger.closest('.category-dd-wrap');
+      if (wrap && !wrap.contains(e.target as Node)) {
+        trigger.classList.remove('is-open');
+        (list as HTMLElement).style.display = 'none';
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  initDropdown('status', 'status', (val) => {
+    const studentIdField = document.getElementById('field-student-id');
+    const studentIdInput = document.getElementById('student-id') as HTMLInputElement;
+    if (!studentIdField) return;
+    if (val === 'student') {
+      studentIdField.style.display = '';
+      studentIdInput?.setAttribute('required', 'required');
+    } else {
+      studentIdField.style.display = 'none';
+      studentIdInput?.removeAttribute('required');
+      setError('student-id', 'err-student-id', '');
+    }
+  });
+
+  initDropdown('heard', 'heard-about');
+  initDropdown('experience', 'experience');
+
+  /* ── SKILLS TAG INPUT ── */
+  const tagInput = document.getElementById('skills-text') as HTMLInputElement;
+  const tagsList = document.getElementById('tags-list') as HTMLElement;
+  const addTagBtn = document.getElementById('add-tag-btn') as HTMLButtonElement;
+  const skillsHidden = document.getElementById('skills-hidden') as HTMLInputElement;
+
+  function renderTags() {
+    tagsList.innerHTML = '';
+    skills.forEach((tag, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.dataset.ci = String(i % TAG_COLORS);
+      el.innerHTML = `${escapeHtml(tag)}<button type="button" class="tag-remove" data-i="${i}" aria-label="Remove ${escapeHtml(tag)}">
+        <svg viewBox="0 0 12 12" fill="none"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>`;
+      tagsList.appendChild(el);
+    });
+    skillsHidden.value = JSON.stringify(skills);
+  }
+
+  function addSkill() {
+    const val = tagInput.value.trim().replace(/,$/, '');
+    if (val && !skills.includes(val)) { skills.push(val); renderTags(); }
+    tagInput.value = '';
+    tagInput.focus();
+    document.getElementById('err-skills')!.textContent = '';
+  }
+
+  addTagBtn.addEventListener('click', addSkill);
+  tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addSkill(); }
+    if (e.key === 'Backspace' && !tagInput.value && skills.length) { skills.pop(); renderTags(); }
+  });
+  tagsList.addEventListener('click', e => {
+    const btn = (e.target as HTMLElement).closest('.tag-remove') as HTMLElement;
+    if (btn) { skills.splice(parseInt(btn.dataset.i || '0'), 1); renderTags(); }
+  });
+
+  /* ── WORD COUNT (Why Join) ── */
+  const whyJoin = document.getElementById('why-join') as HTMLTextAreaElement;
+  const whyJoinCount = document.getElementById('why-join-count') as HTMLElement;
+  whyJoin.addEventListener('input', () => {
+    const wc = whyJoin.value.trim() ? whyJoin.value.trim().split(/\s+/).length : 0;
+    whyJoinCount.textContent = `${wc} / 300 words`;
+    whyJoinCount.classList.toggle('over', wc > 300);
+  });
+
+  /* ── CLEAR ERRORS ON INPUT ── */
+  ['full-name', 'email'].forEach(id => {
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(`err-${id}`);
+    el?.addEventListener('input', () => { el.classList.remove('is-error'); if (errEl) errEl.textContent = ''; });
+  });
+  whyJoin.addEventListener('input', () => { document.getElementById('err-why-join')!.textContent = ''; });
+
+  const consentCheckbox = document.getElementById('consent-checkbox') as HTMLInputElement;
+  consentCheckbox.addEventListener('change', () => { document.getElementById('err-consent')!.textContent = ''; });
+
+  /* ── FORM VALIDATION + SUBMIT (prototype — no backend yet) ── */
+  const form = document.getElementById('join-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const successState = document.getElementById('success-state') as HTMLElement;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let ok = true;
+
+    if (!v('full-name')) { setError('full-name', 'err-full-name', 'Please enter your full name.'); ok = false; }
+    else setError('full-name', 'err-full-name', '');
+
+    const emailVal = v('email');
+    if (!emailVal) { setError('email', 'err-email', 'Please enter your email address.'); ok = false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) { setError('email', 'err-email', 'Please enter a valid email address.'); ok = false; }
+    else setError('email', 'err-email', '');
+
+    if (!v('status')) { setError('status-btn', 'err-status', 'Please select your status.'); ok = false; }
+    else setError('status-btn', 'err-status', '');
+
+    if (v('status') === 'student' && !v('student-id')) {
+      setError('student-id', 'err-student-id', 'Please enter your student ID / program & year.'); ok = false;
+    } else {
+      setError('student-id', 'err-student-id', '');
+    }
+
+    if (!v('why-join')) { setError('why-join', 'err-why-join', 'Please tell us why you want to join.'); ok = false; }
+    else setError('why-join', 'err-why-join', '');
+
+    if (!v('heard-about')) { setError('heard-btn', 'err-heard-about', 'Please let us know how you heard about us.'); ok = false; }
+    else setError('heard-btn', 'err-heard-about', '');
+
+    if (skills.length === 0) { document.getElementById('err-skills')!.textContent = 'Please add at least one skill or interest.'; ok = false; }
+    else document.getElementById('err-skills')!.textContent = '';
+
+    if (!consentCheckbox.checked) { document.getElementById('err-consent')!.textContent = 'Please agree to be contacted before submitting.'; ok = false; }
+    else document.getElementById('err-consent')!.textContent = '';
+
+    if (!ok) {
+      const firstError = form.querySelector('.is-error, .err:not(:empty)');
+      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.querySelector('.submit-btn__label')!.textContent = 'Submitting…';
+
+    // PROTOTYPE: no Supabase table wired up yet. This just simulates
+    // a network round-trip and reveals the success state. Once the
+    // `join_submissions` table exists, replace this block with a
+    // real fetch() POST, mirroring member-form.astro's submit handler.
+    setTimeout(() => {
+      form.style.display = 'none';
+      document.getElementById('hero-inner')!.querySelector('.hero__logo')!.parentElement!.style.padding = '0';
+      successState.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      requestAnimationFrame(() => requestAnimationFrame(() => successState.classList.add('is-visible')));
+    }, 500);
+  });
+</script>
