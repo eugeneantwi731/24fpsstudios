@@ -1,0 +1,763 @@
+---
+export const prerender = false;
+import { getAdminSupabase } from 'src/lib/supabase-admin';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
+
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+const { id } = Astro.params;
+
+const { data: applicant, error } = await supabase
+  .from('join_submissions')
+  .select('*')
+  .eq('id', id)
+  .maybeSingle();
+
+if (!applicant || error) return Astro.redirect('/admin/join');
+
+const skills: string[] = Array.isArray(applicant.skills) ? applicant.skills : [];
+
+// Sidebar badge counts
+const { count: memberPendingCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+const { count: joinPendingCount }   = await supabase.from('join_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+const { count: publishedCount }     = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true);
+
+// Member-form link + WhatsApp invite text, shown once approved.
+// Adjust MEMBER_FORM_URL / WHATSAPP_GROUP_URL below to your real links.
+const MEMBER_FORM_URL = new URL('/member-form', Astro.url.origin).toString();
+const WHATSAPP_GROUP_URL = 'https://chat.whatsapp.com/REPLACE_WITH_YOUR_GROUP_LINK';
+const whatsappMessage = `Hey ${applicant.full_name.split(' ')[0]}! 🎬 Welcome to 24fps Decode Animation Lab — you're in!\n\nJoin our WhatsApp group here: ${WHATSAPP_GROUP_URL}\n\nAnd please fill out your official member profile so you show up on our site: ${MEMBER_FORM_URL}`;
+
+const heardAboutLabels: Record<string, string> = {
+  'word-of-mouth': 'Word of mouth',
+  'poster': 'Poster / flyer',
+  'social-media': 'Social media',
+  'friend-referral': 'Friend referral',
+  'other': 'Other',
+};
+const experienceLabels: Record<string, string> = {
+  'beginner': 'Beginner',
+  'some-experience': 'Some experience',
+  'experienced': 'Experienced',
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{applicant.full_name} — Review — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink:    #E9295D;
+      --teal:    #3FD3D5;
+      --yellow:  #FEC843;
+      --purple:  #9F6ACD;
+      --black:   #1A1A1A;
+      --white:   #FFFFFF;
+      --off:     #F8F5F5;
+      --muted:   #6B7280;
+      --border:  rgba(26,26,26,0.10);
+      --pink-light:   rgba(233,41,93,0.08);
+      --teal-light:   rgba(63,211,213,0.10);
+      --yellow-light: rgba(254,200,67,0.12);
+      --purple-light: rgba(159,106,205,0.10);
+      --green:   #22c55e;
+      --green-light: rgba(34,197,94,0.10);
+    }
+    html, body { height: 100%; font-family: 'Raleway', sans-serif; background: var(--off); color: var(--black); -webkit-font-smoothing: antialiased; }
+
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar { grid-row: 1 / -1; background: var(--white); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10; }
+    .sidebar__brand { padding: 28px 24px 20px; border-bottom: 1.5px solid var(--border); }
+    .sidebar__logo { display: flex; align-items: baseline; gap: 0; line-height: 1; margin-bottom: 4px; }
+    .sidebar__logo-num, .sidebar__logo-fps { font-size: 2rem; font-weight: 900; color: var(--black); letter-spacing: -0.03em; }
+    .sidebar__logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); margin-left: 2px; margin-bottom: 5px; flex-shrink: 0; align-self: flex-end; }
+    .sidebar__tag { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+    .sidebar__admin-badge { margin-top: 14px; display: flex; align-items: center; gap: 10px; background: var(--off); border-radius: 12px; padding: 10px 12px; }
+    .sidebar__avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .sidebar__admin-info { flex: 1; min-width: 0; }
+    .sidebar__admin-name { font-size: 0.82rem; font-weight: 800; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__admin-role { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); }
+    .sidebar__nav { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar__section-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 12px 8px 6px; margin-top: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; text-decoration: none; font-size: 0.84rem; font-weight: 700; color: var(--muted); transition: background 0.18s, color 0.18s; }
+    .nav-item:hover { background: var(--off); color: var(--black); }
+    .nav-item.is-active { background: var(--pink-light); color: var(--pink); }
+    .nav-item__icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--off); }
+    .nav-item.is-active .nav-item__icon { background: rgba(233,41,93,0.12); }
+    .nav-item__icon svg { width: 16px; height: 16px; }
+    .nav-item__badge { margin-left: auto; background: var(--pink); color: white; font-size: 0.65rem; font-weight: 900; padding: 2px 7px; border-radius: 999px; min-width: 20px; text-align: center; }
+    .nav-item--coming { opacity: 0.45; pointer-events: none; }
+    .nav-item__soon { margin-left: auto; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--off); padding: 2px 6px; border-radius: 5px; }
+    .sidebar__footer { padding: 16px; border-top: 1.5px solid var(--border); }
+    .logout-btn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: none; border: none; font-family: 'Raleway', sans-serif; font-size: 0.84rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: background 0.18s, color 0.18s; }
+    .logout-btn:hover { background: rgba(233,41,93,0.06); color: var(--pink); }
+    .logout-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* PAGE CONTENT */
+    .page-body { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* TOPBAR */
+    .topbar { background: var(--white); border-bottom: 1.5px solid var(--border); padding: 14px 32px; display: flex; align-items: center; gap: 14px; }
+    .topbar__back { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); text-decoration: none; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--white); transition: all 0.18s; }
+    .topbar__back:hover { border-color: var(--pink); color: var(--pink); }
+    .topbar__back svg { width: 13px; height: 13px; }
+    .topbar__title { font-size: 1rem; font-weight: 900; color: var(--black); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar__status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .topbar__status-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .topbar__status-badge--pending  { background: rgba(254,200,67,0.15); color: #8a6000; }
+    .topbar__status-badge--pending::before  { background: #FEC843; }
+    .topbar__status-badge--approved { background: rgba(63,211,213,0.12); color: #0a7e80; }
+    .topbar__status-badge--approved::before { background: var(--teal); }
+    .topbar__status-badge--rejected { background: rgba(233,41,93,0.1);  color: var(--pink); }
+    .topbar__status-badge--rejected::before { background: var(--pink); }
+
+    /* MAIN CONTENT */
+    .main { padding: 28px 32px 64px; flex: 1; }
+
+    /* TWO-COL LAYOUT */
+    .review-layout { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+    .right-col { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+
+    /* SECTION CARD */
+    .card { background: var(--white); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; animation: fadeUp 0.35s ease both; }
+    .card__header { padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--off); }
+    .card__header-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .card__header-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .card__body { padding: 22px; }
+
+    /* PROFILE HERO */
+    .profile-hero { display: flex; align-items: flex-start; gap: 20px; }
+    .profile-avatar-init { width: 80px; height: 80px; border-radius: 18px; background: linear-gradient(135deg, var(--pink), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; color: white; flex-shrink: 0; text-transform: uppercase; }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1.4rem; font-weight: 900; color: var(--black); line-height: 1.15; }
+    .profile-badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .cat-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .cat-badge--student     { background: var(--teal-light);   color: #0a7e80; }
+    .cat-badge--alumni      { background: var(--purple-light); color: var(--purple); }
+    .cat-badge--non-student { background: var(--yellow-light); color: #8a6000; }
+    .initials-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 0.65rem; font-weight: 800; background: var(--off); color: var(--muted); border: 1px solid var(--border); }
+
+    /* FIELD ROWS */
+    .field-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .field-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .field-row:first-child { padding-top: 0; }
+    .field-label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); width: 130px; flex-shrink: 0; padding-top: 2px; }
+    .field-value { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 600; color: var(--black); word-break: break-word; line-height: 1.55; }
+    .field-value a { color: var(--pink); text-decoration: none; }
+    .field-value a:hover { text-decoration: underline; }
+    .field-value--muted { color: var(--muted); font-weight: 500; font-style: italic; }
+
+    /* TAGS */
+    .tags-display { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; background: var(--pink-light); color: var(--pink); }
+    .tag-pill:nth-child(4n+2) { background: var(--teal-light); color: #0a7e80; }
+    .tag-pill:nth-child(4n+3) { background: var(--yellow-light); color: #8a6000; }
+    .tag-pill:nth-child(4n+4) { background: var(--purple-light); color: var(--purple); }
+
+    /* WHY JOIN TEXT BLOCK */
+    .prose-block { font-size: 0.88rem; font-weight: 500; color: var(--black); line-height: 1.7; white-space: pre-wrap; }
+
+    /* RIGHT COL: ACTIONS */
+    .action-btn-group { display: flex; flex-direction: column; gap: 8px; }
+    .action-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 16px; border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.04em; border: none; cursor: pointer; transition: all 0.18s; text-decoration: none; box-sizing: border-box; }
+    .action-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+    .action-btn--approve { background: rgba(34,197,94,0.12); color: #166534; border: 1.5px solid rgba(34,197,94,0.25); }
+    .action-btn--approve:hover { background: #22c55e; color: white; border-color: #22c55e; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(34,197,94,0.3); }
+    .action-btn--reject  { background: var(--pink-light); color: var(--pink); border: 1.5px solid rgba(233,41,93,0.2); }
+    .action-btn--reject:hover  { background: var(--pink); color: white; border-color: var(--pink); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(233,41,93,0.3); }
+    .action-btn--restore { background: var(--yellow-light); color: #8a6000; border: 1.5px solid rgba(254,200,67,0.3); }
+    .action-btn--restore:hover { background: var(--yellow); color: var(--black); border-color: var(--yellow); }
+    .action-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* NOTES */
+    .notes-textarea { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--black); outline: none; resize: vertical; min-height: 90px; line-height: 1.55; transition: border-color 0.18s; background: var(--white); }
+    .notes-textarea:focus { border-color: var(--pink); }
+    .notes-save-btn { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; background: var(--black); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; transition: background 0.18s; }
+    .notes-save-btn:hover { background: #333; }
+
+    /* META LIST */
+    .meta-list { display: flex; flex-direction: column; gap: 10px; }
+    .meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; }
+    .meta-key { color: var(--muted); font-weight: 600; }
+    .meta-val { color: var(--black); font-weight: 800; }
+
+    /* EMAIL PANEL */
+    .email-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .email-field label { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .email-input, .email-textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'Raleway', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--black); outline: none; transition: border-color 0.18s; background: var(--white); }
+    .email-input:focus, .email-textarea:focus { border-color: var(--pink); }
+    .email-textarea { min-height: 140px; resize: vertical; line-height: 1.55; font-weight: 500; }
+    .email-send-btn { width: 100%; padding: 11px; border-radius: 10px; background: var(--pink); color: white; border: none; font-family: 'Raleway', sans-serif; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; transition: background 0.18s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .email-send-btn:hover { background: #c91e4f; }
+    .email-send-btn:disabled { opacity: 0.55; pointer-events: none; }
+    .email-send-btn svg { width: 15px; height: 15px; }
+
+    .email-templates { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .email-template-btn { padding: 5px 11px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .email-template-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+    .email-history { display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto; }
+    .email-history-item { padding: 10px 12px; border-radius: 10px; background: var(--off); border: 1px solid var(--border); }
+    .email-history-item--failed { background: var(--pink-light); border-color: rgba(233,41,93,0.25); }
+    .email-history-subject { font-size: 0.78rem; font-weight: 800; color: var(--black); margin-bottom: 2px; }
+    .email-history-meta { font-size: 0.68rem; font-weight: 600; color: var(--muted); }
+    .email-history-empty { font-size: 0.78rem; font-weight: 500; color: var(--muted); text-align: center; padding: 12px 0; }
+
+    /* WHATSAPP / MEMBER-FORM PANEL (shown only when approved) */
+    .approved-panel { background: var(--teal-light); border: 1.5px solid rgba(63,211,213,0.3); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .approved-panel__title { font-size: 0.76rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #0a7e80; }
+    .copy-row { display: flex; gap: 6px; }
+    .copy-row input, .copy-row textarea { flex: 1; padding: 8px 10px; border: 1.5px solid rgba(63,211,213,0.3); border-radius: 8px; font-family: 'Raleway', sans-serif; font-size: 0.76rem; font-weight: 600; color: var(--black); background: var(--white); outline: none; resize: vertical; }
+    .copy-btn { flex-shrink: 0; padding: 8px 12px; border-radius: 8px; background: var(--teal); color: white; border: none; font-size: 0.72rem; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+    .copy-btn:hover { background: #2bb8ba; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: 14px; font-size: 0.84rem; font-weight: 700; box-shadow: 0 8px 32px rgba(0,0,0,0.15); transform: translateY(80px); opacity: 0; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease; pointer-events: none; }
+    .toast.is-visible { transform: translateY(0); opacity: 1; }
+    .toast--success { background: #111; color: white; }
+    .toast--error   { background: var(--pink); color: white; }
+    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 1000px) {
+      .review-layout { grid-template-columns: 1fr; }
+      .right-col { position: static; }
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .topbar { padding: 14px 20px; }
+      .main { padding: 20px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar__brand">
+      <div class="sidebar__logo">
+        <span class="sidebar__logo-num">24</span>
+        <span class="sidebar__logo-fps">fps.</span>
+        <span class="sidebar__logo-dot"></span>
+      </div>
+      <div class="sidebar__tag">Decode Animation Lab</div>
+      <div class="sidebar__admin-badge">
+        <div class="sidebar__avatar">{adminUser?.username?.slice(0,2) ?? 'AD'}</div>
+        <div class="sidebar__admin-info">
+          <div class="sidebar__admin-name">{adminUser?.username ?? 'Admin'}</div>
+          <div class="sidebar__admin-role">{adminUser?.role ?? 'admin'}</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar__nav">
+      <span class="sidebar__section-label">Overview</span>
+      <a href="/admin/dashboard" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" stroke="currentColor" stroke-width="2"/></svg></span>
+        Dashboard
+      </a>
+      <span class="sidebar__section-label">Members</span>
+      <a href="/admin/members" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M21 21v-2a4 4 0 0 0-3-3.85" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        All Members
+      </a>
+      <a href="/admin/members?status=pending" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Pending Review
+        {memberPendingCount && memberPendingCount > 0 && <span class="nav-item__badge">{memberPendingCount}</span>}
+      </a>
+      <span class="sidebar__section-label">Join Applications</span>
+      <a href="/admin/join" class="nav-item is-active">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M19 8v6M22 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        All Applicants
+      </a>
+      <a href="/admin/join?status=pending" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Pending Review
+        {joinPendingCount && joinPendingCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{joinPendingCount}</span>}
+      </a>
+      <span class="sidebar__section-label">Content</span>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.82v6.36a1 1 0 0 1-1.447.888L15 14M3 8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Projects<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Events<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Blog<span class="nav-item__soon">Soon</span></a>
+      <a href="#" class="nav-item nav-item--coming"><span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="2"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Gallery<span class="nav-item__soon">Soon</span></a>
+      <a href="/admin/team" class="nav-item">
+        <span class="nav-item__icon"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        Team
+        {publishedCount && publishedCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{publishedCount}</span>}
+      </a>
+    </nav>
+    <div class="sidebar__footer">
+      <form method="POST" action="/api/admin/logout">
+        <button type="submit" class="logout-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Sign Out
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- PAGE BODY -->
+  <div class="page-body">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <a href="/admin/join" class="topbar__back">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All Applicants
+      </a>
+      <div class="topbar__title">{applicant.full_name}</div>
+      <span class={`topbar__status-badge topbar__status-badge--${applicant.status}`} id="status-badge-topbar">{applicant.status}</span>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="review-layout">
+
+        <!-- LEFT COLUMN — read-only applicant data -->
+        <div class="left-col">
+
+          <!-- PROFILE HERO -->
+          <div class="card">
+            <div class="card__body">
+              <div class="profile-hero">
+                <div class="profile-avatar-init">{applicant.full_name?.split(' ').map((w: string) => w[0]).slice(0,2).join('')}</div>
+                <div class="profile-info">
+                  <div class="profile-name">{applicant.full_name}</div>
+                  <div class="profile-badges">
+                    <span class={`cat-badge cat-badge--${applicant.status_type}`}>{applicant.status_type}</span>
+                    {applicant.experience && <span class="initials-chip">{experienceLabels[applicant.experience] ?? applicant.experience}</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WHO THEY ARE -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-dot" style="background: var(--pink)"></span>
+              <span class="card__header-title">Who They Are</span>
+            </div>
+            <div class="card__body">
+              <div class="field-row">
+                <div class="field-label">Email</div>
+                <div class="field-value"><a href={`mailto:${applicant.email}`}>{applicant.email}</a></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Phone</div>
+                <div class="field-value">
+                  {applicant.phone
+                    ? <a href={`tel:${applicant.phone}`}>{applicant.phone}</a>
+                    : <span class="field-value--muted">Not provided</span>}
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Status</div>
+                <div class="field-value" style="text-transform: capitalize">{applicant.status_type}</div>
+              </div>
+              {applicant.status_type === 'student' && (
+                <div class="field-row">
+                  <div class="field-label">Student ID / Program</div>
+                  <div class="field-value">{applicant.student_id}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- WHY THEY WANT IN -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-dot" style="background: var(--teal)"></span>
+              <span class="card__header-title">Why They Want In</span>
+            </div>
+            <div class="card__body">
+              <div class="field-row">
+                <div class="field-label">Why join</div>
+                <div class="field-value"><div class="prose-block">{applicant.why_join}</div></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Heard about us</div>
+                <div class="field-value">{heardAboutLabels[applicant.heard_about] ?? applicant.heard_about}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WHAT THEY BRING -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-dot" style="background: var(--yellow)"></span>
+              <span class="card__header-title">What They Bring</span>
+            </div>
+            <div class="card__body">
+              <div class="field-row">
+                <div class="field-label">Skills / interests</div>
+                <div class="field-value">
+                  <div class="tags-display">
+                    {skills.length > 0
+                      ? skills.map(s => <span class="tag-pill">{s}</span>)
+                      : <span class="field-value--muted">None listed</span>}
+                  </div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Experience</div>
+                <div class="field-value">
+                  {applicant.experience
+                    ? experienceLabels[applicant.experience] ?? applicant.experience
+                    : <span class="field-value--muted">Not specified</span>}
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">Portfolio</div>
+                <div class="field-value">
+                  {applicant.portfolio
+                    ? <a href={applicant.portfolio} target="_blank" rel="noopener">{applicant.portfolio}</a>
+                    : <span class="field-value--muted">None provided</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN NOTES (internal only) -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-dot" style="background: var(--purple)"></span>
+              <span class="card__header-title">Internal Notes</span>
+            </div>
+            <div class="card__body">
+              <textarea class="notes-textarea" id="notes-textarea" placeholder="Internal notes about this applicant — not visible to them…">{applicant.admin_notes ?? ''}</textarea>
+              <button class="notes-save-btn" id="notes-save-btn" onclick="saveNotes()">Save Notes</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN — actions -->
+        <div class="right-col">
+
+          <!-- STATUS ACTIONS -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-title">Review Decision</span>
+            </div>
+            <div class="card__body">
+              <div class="action-btn-group">
+                {applicant.status !== 'approved' && (
+                  <button class="action-btn action-btn--approve" id="btn-approve" onclick="updateStatus('approved')">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Approve
+                  </button>
+                )}
+                {applicant.status !== 'rejected' && (
+                  <button class="action-btn action-btn--reject" id="btn-reject" onclick="updateStatus('rejected')">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Reject
+                  </button>
+                )}
+                {applicant.status !== 'pending' && (
+                  <button class="action-btn action-btn--restore" onclick="updateStatus('pending')">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>
+                    Reset to Pending
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- APPROVED: member-form link + WhatsApp invite -->
+          {applicant.status === 'approved' && (
+            <div class="approved-panel" id="approved-panel">
+              <div class="approved-panel__title">Next: bring them in</div>
+              <div>
+                <div style="font-size:0.72rem; font-weight:700; color:#0a7e80; margin-bottom:4px;">Member form link</div>
+                <div class="copy-row">
+                  <input type="text" readonly value={MEMBER_FORM_URL} id="member-form-link" />
+                  <button class="copy-btn" onclick="copyField('member-form-link')">Copy</button>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:0.72rem; font-weight:700; color:#0a7e80; margin-bottom:4px;">WhatsApp invite message</div>
+                <div class="copy-row">
+                  <textarea readonly id="whatsapp-message" rows="5">{whatsappMessage}</textarea>
+                  <button class="copy-btn" onclick="copyField('whatsapp-message')">Copy</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <!-- EMAIL PANEL -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-title">Email Applicant</span>
+            </div>
+            <div class="card__body">
+              <div class="email-templates">
+                <button type="button" class="email-template-btn" onclick="useTemplate('interview')">Interview invite</button>
+                <button type="button" class="email-template-btn" onclick="useTemplate('accepted')">Accepted</button>
+                <button type="button" class="email-template-btn" onclick="useTemplate('rejected')">Not this time</button>
+              </div>
+              <div class="email-field">
+                <label for="email-subject">Subject</label>
+                <input type="text" class="email-input" id="email-subject" placeholder="Subject line…" />
+              </div>
+              <div class="email-field">
+                <label for="email-body">Message</label>
+                <textarea class="email-textarea" id="email-body" placeholder={`Write your message to ${applicant.full_name}…`}></textarea>
+              </div>
+              <button class="email-send-btn" id="email-send-btn" onclick="sendEmail()">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Send from info@24fpsstudios.com
+              </button>
+
+              <div style="margin-top:16px;">
+                <div style="font-size:0.68rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">Send History</div>
+                <div class="email-history" id="email-history">
+                  <div class="email-history-empty">Loading…</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- META -->
+          <div class="card">
+            <div class="card__header">
+              <span class="card__header-title">Metadata</span>
+            </div>
+            <div class="card__body">
+              <div class="meta-list">
+                <div class="meta-row">
+                  <span class="meta-key">Applied</span>
+                  <span class="meta-val">{new Date(applicant.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                {applicant.reviewed_by && (
+                  <div class="meta-row">
+                    <span class="meta-key">Reviewed by</span>
+                    <span class="meta-val">{applicant.reviewed_by}</span>
+                  </div>
+                )}
+                {applicant.reviewed_at && (
+                  <div class="meta-row">
+                    <span class="meta-key">Reviewed on</span>
+                    <span class="meta-val">{new Date(applicant.reviewed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                )}
+                <div class="meta-row">
+                  <span class="meta-key">Email</span>
+                  <span class="meta-val" style="font-size:0.72rem;word-break:break-all">{applicant.email}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="toast-icon" viewBox="0 0 24 24" fill="none"></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script define:vars={{ applicantId: applicant.id, applicantName: applicant.full_name, applicantFirstName: applicant.full_name.split(' ')[0], memberFormUrl: MEMBER_FORM_URL, whatsappGroupUrl: WHATSAPP_GROUP_URL }}>
+  // All writes go through server-side /api/admin/join/:id/* routes,
+  // which check the admin_session cookie server-side. No Supabase
+  // keys are used from the browser.
+  const API_BASE = `/api/admin/join/${applicantId}`;
+
+  // ── TOAST ──
+  function showToast(msg, type = 'success') {
+    const toast = document.getElementById('toast');
+    const msgEl = document.getElementById('toast-msg');
+    const iconEl = document.getElementById('toast-icon');
+    msgEl.textContent = msg;
+    toast.className = `toast toast--${type}`;
+    if (type === 'success') {
+      iconEl.innerHTML = `<path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>`;
+    } else {
+      iconEl.innerHTML = `<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`;
+    }
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    setTimeout(() => toast.classList.remove('is-visible'), 3000);
+  }
+
+  async function apiCall(path, options = {}) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options,
+    });
+    let data = null;
+    try { data = await res.json(); } catch { /* no body */ }
+    if (!res.ok) {
+      throw new Error(data?.error || `Request failed (${res.status})`);
+    }
+    return data;
+  }
+
+  // ── STATUS UPDATE ──
+  window.updateStatus = async function updateStatus(newStatus) {
+    const btns = document.querySelectorAll('.action-btn');
+    btns.forEach(b => b.disabled = true);
+    try {
+      await apiCall('/status', {
+        method: 'POST',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const msgMap = { approved: 'Applicant approved!', rejected: 'Applicant rejected.', pending: 'Reset to pending.' };
+      showToast(msgMap[newStatus] || 'Status updated.');
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      showToast(err.message || 'Failed to update status.', 'error');
+    } finally {
+      btns.forEach(b => b.disabled = false);
+    }
+  };
+
+  // ── NOTES ──
+  window.saveNotes = async function saveNotes() {
+    const notes = document.getElementById('notes-textarea').value;
+    const btn = document.getElementById('notes-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try {
+      await apiCall('/notes', { method: 'POST', body: JSON.stringify({ notes }) });
+      showToast('Notes saved.');
+    } catch (err) {
+      showToast(err.message || 'Failed to save notes.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save Notes';
+    }
+  };
+
+  // ── EMAIL TEMPLATES ──
+  const templates = {
+    interview: {
+      subject: `Interview invite — 24fps Decode Animation Lab`,
+      body: `Hi ${applicantFirstName},\n\nThanks for applying to join 24fps Decode Animation Lab! We'd love to chat with you before making a decision.\n\nCould you let us know your availability this week for a short interview? It'll be casual — just a chance for us to get to know you a bit better.\n\nLooking forward to it!\n\n— 24fps Decode Animation Lab`,
+    },
+    accepted: {
+      subject: `You're in! Welcome to 24fps Decode Animation Lab`,
+      body: `Hi ${applicantFirstName},\n\nGreat news — you've been accepted into 24fps Decode Animation Lab! 🎬\n\nWe'll be in touch shortly with our WhatsApp group link and the official member form so you can get fully set up.\n\nWelcome aboard!\n\n— 24fps Decode Animation Lab`,
+    },
+    rejected: {
+      subject: `Update on your 24fps application`,
+      body: `Hi ${applicantFirstName},\n\nThank you for your interest in 24fps Decode Animation Lab and for taking the time to apply.\n\nAfter careful consideration, we won't be moving forward with your application at this time. We'd still love to see you at our future open events — keep an eye on our socials.\n\nThanks again, and we hope to cross paths soon.\n\n— 24fps Decode Animation Lab`,
+    },
+  };
+
+  window.useTemplate = function useTemplate(key) {
+    const t = templates[key];
+    if (!t) return;
+    document.getElementById('email-subject').value = t.subject;
+    document.getElementById('email-body').value = t.body;
+  };
+
+  // ── SEND EMAIL ──
+  window.sendEmail = async function sendEmail() {
+    const subject = document.getElementById('email-subject').value.trim();
+    const body = document.getElementById('email-body').value.trim();
+    if (!subject || !body) {
+      showToast('Subject and message are both required.', 'error');
+      return;
+    }
+    const btn = document.getElementById('email-send-btn');
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = 'Sending…';
+    try {
+      await apiCall('/email', { method: 'POST', body: JSON.stringify({ subject, body }) });
+      showToast('Email sent!');
+      document.getElementById('email-subject').value = '';
+      document.getElementById('email-body').value = '';
+      loadEmailHistory();
+    } catch (err) {
+      showToast(err.message || 'Failed to send email.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  };
+
+  // ── EMAIL HISTORY ──
+  async function loadEmailHistory() {
+    const container = document.getElementById('email-history');
+    try {
+      const data = await apiCall('/emails', { method: 'GET' });
+      const emails = data?.emails ?? [];
+      if (emails.length === 0) {
+        container.innerHTML = '<div class="email-history-empty">No emails sent yet.</div>';
+        return;
+      }
+      container.innerHTML = emails.map(e => {
+        const date = new Date(e.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const failed = e.status === 'failed';
+        return `
+          <div class="email-history-item${failed ? ' email-history-item--failed' : ''}">
+            <div class="email-history-subject">${escapeHtml(e.subject)}</div>
+            <div class="email-history-meta">${failed ? 'Failed · ' : 'Sent · '}${date} by ${escapeHtml(e.sent_by)}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      container.innerHTML = '<div class="email-history-empty">Couldn\'t load email history.</div>';
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ── COPY TO CLIPBOARD ──
+  window.copyField = function copyField(id) {
+    const el = document.getElementById(id);
+    el.select?.();
+    navigator.clipboard.writeText(el.value).then(() => {
+      showToast('Copied to clipboard.');
+    }).catch(() => {
+      showToast('Could not copy — select and copy manually.', 'error');
+    });
+  };
+
+  loadEmailHistory();
+</script>
+</body>
+</html>

@@ -1,13 +1,13 @@
 ---
 // src/pages/join.astro
-// 24fps Decode Animation Lab - Join / Interest Form (prototype)
+// 24fps Decode Animation Lab - Join / Interest Form
 // Collects interest from prospective members ahead of Friday's intro
 // session. Applicants are vetted by an administrator before they're
 // sent the official Member Profile Submission form.
-// PROTOTYPE: no Supabase table wired up yet — submit just reveals
-// the success state locally. Swap in a real insert once the table
-// (e.g. `join_submissions`) exists.
+// Submits to POST /api/join, which inserts into join_submissions
+// (status: 'pending'). Reviewed from /admin/join.
 // No Navbar or Footer - standalone page shared via WhatsApp link
+export const prerender = false;
 ---
 
 <html lang="en">
@@ -290,6 +290,7 @@
 
         <!-- ══ SUBMIT ══ -->
         <div class="submit-strip">
+          <div class="form-level-error" id="form-level-error" style="display:none"></div>
           <button type="submit" class="submit-btn" id="submit-btn">
             <span class="submit-btn__label">Submit Application</span>
             <svg viewBox="0 0 20 20" fill="none" class="submit-btn__icon"><path d="M3 10h14M11 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -574,7 +575,12 @@
   .consent-check__label { font-size: 0.86rem; font-weight: 500; color: var(--black); line-height: 1.6; }
 
   /* ── SUBMIT ── */
-  .submit-strip { display: flex; justify-content: center; margin-top: 36px; }
+  .submit-strip { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 36px; }
+  .form-level-error {
+    max-width: 480px; text-align: center; font-size: 0.82rem; font-weight: 600;
+    color: var(--pink); background: rgba(233,41,93,0.08); border: 1px solid rgba(233,41,93,0.25);
+    padding: 10px 16px; border-radius: 10px;
+  }
   .submit-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--pink); color: white; font-family: 'Raleway', sans-serif; font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; padding: 15px 34px; border: none; border-radius: 999px; cursor: pointer; box-shadow: 0 4px 20px rgba(233,41,93,0.4); transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
   .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(233,41,93,0.45); }
   .submit-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
@@ -889,13 +895,15 @@
   const consentCheckbox = document.getElementById('consent-checkbox') as HTMLInputElement;
   consentCheckbox.addEventListener('change', () => { document.getElementById('err-consent')!.textContent = ''; });
 
-  /* ── FORM VALIDATION + SUBMIT (prototype — no backend yet) ── */
+  /* ── FORM VALIDATION + SUBMIT ── */
   const form = document.getElementById('join-form') as HTMLFormElement;
   const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
   const successState = document.getElementById('success-state') as HTMLElement;
+  const formLevelError = document.getElementById('form-level-error') as HTMLElement;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    formLevelError.style.display = 'none';
     let ok = true;
 
     if (!v('full-name')) { setError('full-name', 'err-full-name', 'Please enter your full name.'); ok = false; }
@@ -936,16 +944,43 @@
     submitBtn.disabled = true;
     submitBtn.querySelector('.submit-btn__label')!.textContent = 'Submitting…';
 
-    // PROTOTYPE: no Supabase table wired up yet. This just simulates
-    // a network round-trip and reveals the success state. Once the
-    // `join_submissions` table exists, replace this block with a
-    // real fetch() POST, mirroring member-form.astro's submit handler.
-    setTimeout(() => {
+    const payload = {
+      full_name: v('full-name'),
+      email: v('email'),
+      phone: v('phone'),
+      status_type: v('status'),
+      student_id: v('status') === 'student' ? v('student-id') : null,
+      why_join: v('why-join'),
+      heard_about: v('heard-about'),
+      skills,
+      experience: v('experience') || null,
+      portfolio: v('portfolio') || null,
+      consent: consentCheckbox.checked,
+    };
+
+    try {
+      const res = await fetch('/api/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Something went wrong. Please try again.');
+      }
+
       form.style.display = 'none';
       document.getElementById('hero-inner')!.querySelector('.hero__logo')!.parentElement!.style.padding = '0';
       successState.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
       requestAnimationFrame(() => requestAnimationFrame(() => successState.classList.add('is-visible')));
-    }, 500);
+    } catch (err: any) {
+      formLevelError.textContent = err?.message || 'Something went wrong. Please try again.';
+      formLevelError.style.display = 'block';
+      formLevelError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      submitBtn.disabled = false;
+      submitBtn.querySelector('.submit-btn__label')!.textContent = 'Submit Application';
+    }
   });
 </script>

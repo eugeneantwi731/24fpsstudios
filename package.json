@@ -12,7 +12,8 @@
     "@astrojs/cloudflare": "^12.5.0",
     "@supabase/supabase-js": "^2.107.0",
     "astro": "^5.9.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "worker-mailer": "^1.2.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260607.1"
