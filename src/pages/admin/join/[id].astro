@@ -390,10 +390,16 @@ const experienceLabels: Record<string, string> = {
                 <div class="field-value" style="text-transform: capitalize">{applicant.status_type}</div>
               </div>
               {applicant.status_type === 'student' && (
-                <div class="field-row">
-                  <div class="field-label">Student ID / Program</div>
-                  <div class="field-value">{applicant.student_id}</div>
-                </div>
+                <>
+                  <div class="field-row">
+                    <div class="field-label">Program</div>
+                    <div class="field-value">{applicant.student_program}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-label">Year / Level</div>
+                    <div class="field-value">{applicant.student_year}</div>
+                  </div>
+                </>
               )}
             </div>
           </div>

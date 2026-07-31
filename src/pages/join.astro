@@ -99,14 +99,15 @@ export const prerender = false;
               <span class="err" id="err-email"></span>
             </div>
             <div class="field">
-              <label class="label" for="phone">Phone / WhatsApp Number <span class="opt">optional</span></label>
+              <label class="label" for="phone">Phone / WhatsApp Number <span class="req">*</span></label>
               <input class="input" id="phone" name="phone" type="tel"
-                     placeholder="e.g. +233 24 123 4567" autocomplete="tel" />
-              <span class="hint">Filling this in counts as consent to be contacted this way.</span>
+                     placeholder="e.g. +233 24 123 4567" autocomplete="tel" required />
+              <span class="hint">We'll use this to reach you on WhatsApp about your application.</span>
+              <span class="err" id="err-phone"></span>
             </div>
           </div>
 
-          <div class="fields fields--2" style="margin-top:16px">
+          <div class="fields fields--status-only" style="margin-top:16px">
             <div class="field">
               <label class="label" for="status-btn">Status <span class="req">*</span></label>
               <div class="category-dd-wrap" id="status-dd-wrap">
@@ -126,11 +127,20 @@ export const prerender = false;
               <input type="hidden" id="status" name="status" required />
               <span class="err" id="err-status"></span>
             </div>
-            <div class="field" id="field-program" style="display:none">
-              <label class="label" for="program">Program <span class="req">*</span></label>
-              <input class="input" id="program" name="program" type="text"
+          </div>
+
+          <div class="fields fields--program-year" id="field-student-info" style="display:none; margin-top:16px">
+            <div class="field">
+              <label class="label" for="student-program">Program <span class="req">*</span></label>
+              <input class="input" id="student-program" name="student_program" type="text"
                      placeholder="e.g. Communication Design" />
-              <span class="err" id="err-program"></span>
+              <span class="err" id="err-student-program"></span>
+            </div>
+            <div class="field">
+              <label class="label" for="student-year">Year / Level <span class="req">*</span></label>
+              <input class="input" id="student-year" name="student_year" type="text"
+                     placeholder="e.g. Level 300 / Year 3" />
+              <span class="err" id="err-student-year"></span>
             </div>
           </div>
         </div>
@@ -230,7 +240,7 @@ export const prerender = false;
 
           <div class="fields fields--2" style="margin-top:20px">
             <div class="field">
-              <label class="label" for="experience-btn">Experience Level <span class="opt">optional</span></label>
+              <label class="label" for="experience-btn">Experience Level <span class="req">*</span></label>
               <div class="category-dd-wrap" id="experience-dd-wrap">
                 <button type="button" class="input category-dd-trigger" id="experience-btn"
                         aria-haspopup="listbox" aria-expanded="false">
@@ -245,7 +255,8 @@ export const prerender = false;
                   <li class="category-dd-item" role="option" data-value="experienced">Experienced</li>
                 </ul>
               </div>
-              <input type="hidden" id="experience" name="experience" />
+              <input type="hidden" id="experience" name="experience" required />
+              <span class="err" id="err-experience"></span>
             </div>
             <div class="field">
               <label class="label" for="portfolio">Portfolio or work sample link <span class="opt">optional</span></label>
@@ -497,6 +508,9 @@ export const prerender = false;
   .fields { display: grid; gap: 16px; }
   .fields--2 { grid-template-columns: 1fr 1fr; }
   .fields--3 { grid-template-columns: 1fr 1fr 1fr; }
+  .fields--status-only { display: block; }
+  .fields--status-only .field { max-width: 320px; }
+  .fields--program-year { grid-template-columns: 1.4fr 1fr; }
   .field { display: flex; flex-direction: column; gap: 5px; }
 
   .label { font-size: 0.92rem; font-weight: 700; letter-spacing: 0.04em; color: var(--black); }
@@ -556,8 +570,7 @@ export const prerender = false;
   .tag[data-ci="1"] { background: #C4F2F2; color: #0A7E80; }
   .tag[data-ci="2"] { background: #FFF0B3; color: #8A6000; }
   .tag[data-ci="3"] { background: #E8D5F5; color: #6A35A8; }
-  .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: none; border: none; border-radius: 50%; opacity: 0.75; transition: opacity 0.15s, background 0.15s; color: inherit; cursor: pointer; padding: 0; }
-  .tag-remove:hover { opacity: 1; background: rgba(0,0,0,0.1); }
+  .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: rgba(0,0,0,0.12); border: none; border-radius: 50%; color: inherit; cursor: pointer; padding: 0; }
   .tag-remove svg { width: 8px; height: 8px; }
 
   /* ── CONSENT CHECKBOX ── */
@@ -717,7 +730,8 @@ export const prerender = false;
   @media (max-width: 680px) {
     .hero { padding: 48px 20px 56px; }
     .section { padding: 28px 22px; }
-    .fields--2, .fields--3 { grid-template-columns: 1fr; }
+    .fields--2, .fields--3, .fields--program-year { grid-template-columns: 1fr; }
+    .fields--status-only .field { max-width: none; }
     .submit-strip { padding: 0 22px; }
     .section__icon-bg { width: 48px; height: 48px; margin-top: 0; }
     .section__icon-bg svg { width: 30px; height: 30px; }
@@ -822,16 +836,20 @@ export const prerender = false;
   }
 
   initDropdown('status', 'status', (val) => {
-    const programField = document.getElementById('field-program');
-    const programInput = document.getElementById('program') as HTMLInputElement;
-    if (!programField) return;
+    const studentInfoField = document.getElementById('field-student-info');
+    const programInput = document.getElementById('student-program') as HTMLInputElement;
+    const yearInput = document.getElementById('student-year') as HTMLInputElement;
+    if (!studentInfoField) return;
     if (val === 'student') {
-      programField.style.display = '';
+      studentInfoField.style.display = '';
       programInput?.setAttribute('required', 'required');
+      yearInput?.setAttribute('required', 'required');
     } else {
-      programField.style.display = 'none';
+      studentInfoField.style.display = 'none';
       programInput?.removeAttribute('required');
-      setError('program', 'err-program', '');
+      yearInput?.removeAttribute('required');
+      setError('student-program', 'err-student-program', '');
+      setError('student-year', 'err-student-year', '');
     }
   });
 
@@ -915,13 +933,22 @@ export const prerender = false;
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) { setError('email', 'err-email', 'Please enter a valid email address.'); ok = false; }
     else setError('email', 'err-email', '');
 
+    if (!v('phone')) { setError('phone', 'err-phone', 'Please enter your phone / WhatsApp number.'); ok = false; }
+    else setError('phone', 'err-phone', '');
+
     if (!v('status')) { setError('status-btn', 'err-status', 'Please select your status.'); ok = false; }
     else setError('status-btn', 'err-status', '');
 
-    if (v('status') === 'student' && !v('program')) {
-      setError('program', 'err-program', 'Please enter your program.'); ok = false;
+    if (v('status') === 'student' && !v('student-program')) {
+      setError('student-program', 'err-student-program', 'Please enter your program.'); ok = false;
     } else {
-      setError('program', 'err-program', '');
+      setError('student-program', 'err-student-program', '');
+    }
+
+    if (v('status') === 'student' && !v('student-year')) {
+      setError('student-year', 'err-student-year', 'Please enter your year or level.'); ok = false;
+    } else {
+      setError('student-year', 'err-student-year', '');
     }
 
     if (!v('why-join')) { setError('why-join', 'err-why-join', 'Please tell us why you want to join.'); ok = false; }
@@ -932,6 +959,9 @@ export const prerender = false;
 
     if (skills.length === 0) { document.getElementById('err-skills')!.textContent = 'Please add at least one skill or interest.'; ok = false; }
     else document.getElementById('err-skills')!.textContent = '';
+
+    if (!v('experience')) { setError('experience-btn', 'err-experience', 'Please select your experience level.'); ok = false; }
+    else setError('experience-btn', 'err-experience', '');
 
     if (!consentCheckbox.checked) { document.getElementById('err-consent')!.textContent = 'Please agree to be contacted before submitting.'; ok = false; }
     else document.getElementById('err-consent')!.textContent = '';
@@ -950,7 +980,8 @@ export const prerender = false;
       email: v('email'),
       phone: v('phone'),
       status_type: v('status'),
-      program: v('status') === 'student' ? v('program') : null,
+      student_program: v('status') === 'student' ? v('student-program') : null,
+      student_year: v('status') === 'student' ? v('student-year') : null,
       why_join: v('why-join'),
       heard_about: v('heard-about'),
       skills,

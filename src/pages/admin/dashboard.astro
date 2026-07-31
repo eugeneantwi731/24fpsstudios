@@ -32,6 +32,10 @@ const { count: pendingCount }  = await supabase.from('member_submissions').selec
 const { count: approvedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'approved');
 const { count: rejectedCount } = await supabase.from('member_submissions').select('*', { count: 'exact', head: true }).eq('status', 'rejected');
 
+// Join applications + published team member counts, for sidebar badges
+const { count: joinPendingCount } = await supabase.from('join_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+const { count: publishedCount }   = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true);
+
 // Fetch recent submissions
 const { data: recentSubmissions } = await supabase
   .from('member_submissions')
@@ -923,6 +927,22 @@ const setupDone = Astro.url.searchParams.get('setup') === 'done';
         </a>
 
         <span class="sidebar__section-label">Content</span>
+
+        <a href="/admin/team" class="nav-item">
+          <span class="nav-item__icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          Team
+          {publishedCount && publishedCount > 0 && <span class="nav-item__badge" style="background: var(--teal);">{publishedCount}</span>}
+        </a>
+
+        <a href="/admin/join" class="nav-item">
+          <span class="nav-item__icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M19 8v6M22 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          Join Applications
+          {joinPendingCount && joinPendingCount > 0 && <span class="nav-item__badge">{joinPendingCount}</span>}
+        </a>
 
         <a href="#" class="nav-item nav-item--coming">
           <span class="nav-item__icon">
