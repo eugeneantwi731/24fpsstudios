@@ -126,11 +126,11 @@ export const prerender = false;
               <input type="hidden" id="status" name="status" required />
               <span class="err" id="err-status"></span>
             </div>
-            <div class="field" id="field-student-id" style="display:none">
-              <label class="label" for="student-id">Student ID / Program &amp; Year <span class="req">*</span></label>
-              <input class="input" id="student-id" name="student_id" type="text"
-                     placeholder="e.g. BCD/123456 - Communication Design, Level 300" />
-              <span class="err" id="err-student-id"></span>
+            <div class="field" id="field-program" style="display:none">
+              <label class="label" for="program">Program <span class="req">*</span></label>
+              <input class="input" id="program" name="program" type="text"
+                     placeholder="e.g. Communication Design" />
+              <span class="err" id="err-program"></span>
             </div>
           </div>
         </div>
@@ -556,7 +556,8 @@ export const prerender = false;
   .tag[data-ci="1"] { background: #C4F2F2; color: #0A7E80; }
   .tag[data-ci="2"] { background: #FFF0B3; color: #8A6000; }
   .tag[data-ci="3"] { background: #E8D5F5; color: #6A35A8; }
-  .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: rgba(0,0,0,0.12); border: none; border-radius: 50%; color: inherit; cursor: pointer; padding: 0; }
+  .tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: none; border: none; border-radius: 50%; opacity: 0.75; transition: opacity 0.15s, background 0.15s; color: inherit; cursor: pointer; padding: 0; }
+  .tag-remove:hover { opacity: 1; background: rgba(0,0,0,0.1); }
   .tag-remove svg { width: 8px; height: 8px; }
 
   /* ── CONSENT CHECKBOX ── */
@@ -821,16 +822,16 @@ export const prerender = false;
   }
 
   initDropdown('status', 'status', (val) => {
-    const studentIdField = document.getElementById('field-student-id');
-    const studentIdInput = document.getElementById('student-id') as HTMLInputElement;
-    if (!studentIdField) return;
+    const programField = document.getElementById('field-program');
+    const programInput = document.getElementById('program') as HTMLInputElement;
+    if (!programField) return;
     if (val === 'student') {
-      studentIdField.style.display = '';
-      studentIdInput?.setAttribute('required', 'required');
+      programField.style.display = '';
+      programInput?.setAttribute('required', 'required');
     } else {
-      studentIdField.style.display = 'none';
-      studentIdInput?.removeAttribute('required');
-      setError('student-id', 'err-student-id', '');
+      programField.style.display = 'none';
+      programInput?.removeAttribute('required');
+      setError('program', 'err-program', '');
     }
   });
 
@@ -917,10 +918,10 @@ export const prerender = false;
     if (!v('status')) { setError('status-btn', 'err-status', 'Please select your status.'); ok = false; }
     else setError('status-btn', 'err-status', '');
 
-    if (v('status') === 'student' && !v('student-id')) {
-      setError('student-id', 'err-student-id', 'Please enter your student ID / program & year.'); ok = false;
+    if (v('status') === 'student' && !v('program')) {
+      setError('program', 'err-program', 'Please enter your program.'); ok = false;
     } else {
-      setError('student-id', 'err-student-id', '');
+      setError('program', 'err-program', '');
     }
 
     if (!v('why-join')) { setError('why-join', 'err-why-join', 'Please tell us why you want to join.'); ok = false; }
@@ -949,7 +950,7 @@ export const prerender = false;
       email: v('email'),
       phone: v('phone'),
       status_type: v('status'),
-      student_id: v('status') === 'student' ? v('student-id') : null,
+      program: v('status') === 'student' ? v('program') : null,
       why_join: v('why-join'),
       heard_about: v('heard-about'),
       skills,

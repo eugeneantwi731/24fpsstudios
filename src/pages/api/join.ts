@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     email,
     phone,
     status_type,
-    student_id,
+    program,
     why_join,
     heard_about,
     skills,
@@ -42,8 +42,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
   if (!['student', 'alumni', 'non-student'].includes(status_type)) {
     return jsonError(400, 'Status must be student, alumni, or non-student');
   }
-  if (status_type === 'student' && (typeof student_id !== 'string' || !student_id.trim())) {
-    return jsonError(400, 'Student ID / program & year is required for students');
+  if (status_type === 'student' && (typeof program !== 'string' || !program.trim())) {
+    return jsonError(400, 'Program is required for students');
   }
   if (typeof why_join !== 'string' || !why_join.trim()) {
     return jsonError(400, 'Please tell us why you want to join');
@@ -68,7 +68,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       email: email.trim().toLowerCase(),
       phone: phone?.trim() || null,
       status_type,
-      student_id: status_type === 'student' ? student_id.trim() : null,
+      program: status_type === 'student' ? program.trim() : null,
       why_join: why_join.trim(),
       heard_about,
       skills,
