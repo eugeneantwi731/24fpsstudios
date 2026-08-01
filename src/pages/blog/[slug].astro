@@ -1,0 +1,9 @@
+---
+// src/pages/blog/[slug].astro
+// Catches old-style /blog/some-post URLs (in case any existed or get
+// shared from memory/screenshots) and forwards to the /feed equivalent,
+// preserving the slug so the exact article still resolves.
+export const prerender = false;
+const { slug } = Astro.params;
+return Astro.redirect(`/feed/${slug}`, 301);
+---
