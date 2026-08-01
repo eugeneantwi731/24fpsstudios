@@ -36,6 +36,10 @@ const { count: rejectedCount } = await supabase.from('member_submissions').selec
 const { count: joinPendingCount } = await supabase.from('join_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
 const { count: publishedCount }   = await supabase.from('members').select('*', { count: 'exact', head: true }).eq('published', true);
 
+// Blog post counts, for sidebar badge + Content Management card
+const { count: blogPublishedCount } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published');
+const { count: blogDraftCount }     = await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft');
+
 // Fetch recent submissions
 const { data: recentSubmissions } = await supabase
   .from('member_submissions')
@@ -960,12 +964,12 @@ const setupDone = Astro.url.searchParams.get('setup') === 'done';
           <span class="nav-item__soon">Soon</span>
         </a>
 
-        <a href="#" class="nav-item nav-item--coming">
+        <a href="/admin/blog" class="nav-item">
           <span class="nav-item__icon">
             <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </span>
           Blog
-          <span class="nav-item__soon">Soon</span>
+          {blogDraftCount && blogDraftCount > 0 && <span class="nav-item__badge" style="background: var(--yellow); color: #8a6000;">{blogDraftCount}</span>}
         </a>
 
         <a href="#" class="nav-item nav-item--coming">
@@ -1177,14 +1181,40 @@ const setupDone = Astro.url.searchParams.get('setup') === 'done';
           </div>
         </div>
 
-        <!-- Coming Soon -->
+        <!-- Blog -->
         <div class="info-card">
-          <div class="info-card__title">Content Management</div>
-          <div class="coming-soon-inner">
-            <div style="font-size:2.5rem">🎬</div>
-            <div class="coming-soon-pill">Coming Soon</div>
-            <div class="coming-soon-title">Projects, Events & Blog</div>
-            <div class="coming-soon-sub">Content management tools are being built. Stay tuned.</div>
+          <div class="info-card__title">Blog & Feed</div>
+          <div class="quick-links">
+            <a href="/admin/blog" class="quick-link">
+              <div class="quick-link__icon" style="background:rgba(63,211,213,0.12);color:#0a7e80">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div class="quick-link__label">{blogPublishedCount ?? 0} Published Posts</div>
+                <div class="quick-link__sub">{blogDraftCount ?? 0} drafts waiting</div>
+              </div>
+              <div class="quick-link__arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            </a>
+            <a href="/admin/blog/editor" class="quick-link">
+              <div class="quick-link__icon" style="background:rgba(233,41,93,0.08);color:var(--pink)">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div class="quick-link__label">Write New Post</div>
+                <div class="quick-link__sub">Open the rich text editor</div>
+              </div>
+              <div class="quick-link__arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            </a>
+            <a href="/feed" target="_blank" class="quick-link">
+              <div class="quick-link__icon" style="background:rgba(159,106,205,0.1);color:var(--purple)">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15 3h6v6M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <div class="quick-link__label">View Live Feed</div>
+                <div class="quick-link__sub">Open the public /feed page</div>
+              </div>
+              <div class="quick-link__arrow"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            </a>
           </div>
         </div>
       </div>

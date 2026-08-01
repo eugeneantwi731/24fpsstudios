@@ -1,0 +1,163 @@
+---
+// src/pages/feed/[slug].astro
+// Public article detail page. Same shape as team/[slug].astro:
+// anon client, RLS-gated to published posts only, redirect on miss.
+export const prerender = false;
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { createClient } from '@supabase/supabase-js';
+
+const { slug } = Astro.params;
+
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabaseUrl = runtimeEnv?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ?? import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const { data: post, error } = await supabase
+  .from('blog_posts')
+  .select('*')
+  .eq('slug', slug)
+  .eq('status', 'published')
+  .maybeSingle();
+
+if (error || !post) {
+  return Astro.redirect('/feed');
+}
+
+// Related posts: same category, excluding this one, most recent first
+const { data: related } = await supabase
+  .from('blog_posts')
+  .select('slug, title, cover_image_url, category, published_at')
+  .eq('status', 'published')
+  .eq('category', post.category)
+  .neq('id', post.id)
+  .order('published_at', { ascending: false })
+  .limit(3);
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function initialsFor(name: string | null) {
+  return (name || '?').split(/\s+/).filter(Boolean).map((w) => w[0]?.toUpperCase()).slice(0, 2).join('');
+}
+
+const tags: string[] = Array.isArray(post.tags) ? post.tags : [];
+---
+
+<BaseLayout title={post.title} description={post.excerpt || undefined}>
+  <article class="post-page">
+    <a href="/feed" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Back to Feed
+    </a>
+
+    <header class="post-header">
+      <span class="post-category">{post.category}</span>
+      <h1 class="post-title">{post.title}</h1>
+      {post.excerpt && <p class="post-excerpt">{post.excerpt}</p>}
+
+      <div class="post-meta">
+        <span class="avatar-initials">{initialsFor(post.author_name)}</span>
+        <div class="post-meta__text">
+          <span class="post-meta__author">{post.author_name || '24fps Team'}</span>
+          <span class="post-meta__date">
+            {formatDate(post.published_at)}
+            {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    {post.cover_image_url && (
+      <div class="post-cover">
+        <img src={post.cover_image_url} alt="" />
+      </div>
+    )}
+
+    <div class="post-content" set:html={post.content_html} />
+
+    {tags.length > 0 && (
+      <div class="post-tags">
+        {tags.map((tag) => <span class="post-tag">{tag}</span>)}
+      </div>
+    )}
+
+    {related && related.length > 0 && (
+      <section class="related-section">
+        <h2 class="related-section__title">More in {post.category}</h2>
+        <div class="related-grid">
+          {related.map((r) => (
+            <a href={`/feed/${r.slug}`} class="related-card">
+              {r.cover_image_url
+                ? <img src={r.cover_image_url} alt="" class="related-card__img" />
+                : <div class="related-card__img related-card__img--fallback" />}
+              <div class="related-card__title">{r.title}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .post-page { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: #6B7280;
+    font-size: 0.85rem; font-weight: 700; margin-bottom: 2rem;
+  }
+  .back-link svg { width: 16px; height: 16px; }
+  .back-link:hover { color: #E9295D; }
+
+  .post-header { margin-bottom: 2rem; }
+  .post-category {
+    display: inline-block; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #E9295D; background: rgba(233,41,93,0.08); padding: 5px 14px; border-radius: 999px; margin-bottom: 1rem;
+  }
+  .post-title { font-size: clamp(1.7rem, 4vw, 2.5rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.15; color: #1A1A1A; }
+  .post-excerpt { font-size: 1.1rem; color: #6B7280; line-height: 1.6; margin-top: 1rem; }
+
+  .post-meta { display: flex; align-items: center; gap: 12px; margin-top: 1.5rem; }
+  .avatar-initials {
+    width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #E9295D, #9F6ACD);
+    color: white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800; flex-shrink: 0;
+  }
+  .post-meta__text { display: flex; flex-direction: column; }
+  .post-meta__author { font-size: 0.88rem; font-weight: 800; color: #1A1A1A; }
+  .post-meta__date { font-size: 0.78rem; color: #6B7280; font-weight: 600; }
+
+  .post-cover { border-radius: 18px; overflow: hidden; margin-bottom: 2.5rem; }
+  .post-cover img { width: 100%; display: block; }
+
+  .post-content { font-size: 1.05rem; line-height: 1.8; color: #1A1A1A; }
+  .post-content :global(h1) { font-size: 1.7rem; font-weight: 900; margin: 1.8em 0 0.6em; letter-spacing: -0.01em; }
+  .post-content :global(h2) { font-size: 1.4rem; font-weight: 800; margin: 1.6em 0 0.6em; }
+  .post-content :global(h3) { font-size: 1.15rem; font-weight: 800; margin: 1.4em 0 0.5em; }
+  .post-content :global(p) { margin: 1em 0; }
+  .post-content :global(ul), .post-content :global(ol) { margin: 1em 0; padding-left: 1.5em; }
+  .post-content :global(li) { margin: 0.4em 0; }
+  .post-content :global(blockquote) {
+    border-left: 3px solid #E9295D; margin: 1.5em 0; padding: 0.5em 0 0.5em 1.3em; color: #6B7280; font-style: italic; font-size: 1.05em;
+  }
+  .post-content :global(pre) {
+    background: #1A1A1A; color: #f1f1f1; padding: 18px 20px; border-radius: 12px; overflow-x: auto; margin: 1.5em 0; font-size: 0.88rem; line-height: 1.6;
+  }
+  .post-content :global(code) { background: rgba(26,26,26,0.06); padding: 2px 6px; border-radius: 5px; font-size: 0.9em; }
+  .post-content :global(pre code) { background: none; padding: 0; }
+  .post-content :global(img) { max-width: 100%; border-radius: 14px; margin: 1.5em 0; display: block; }
+  .post-content :global(a) { color: #E9295D; text-decoration: underline; }
+  .post-content :global(hr) { border: none; border-top: 1.5px solid rgba(26,26,26,0.1); margin: 2.5em 0; }
+
+  .post-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2.5rem; padding-top: 2rem; border-top: 1.5px solid rgba(26,26,26,0.08); }
+  .post-tag { font-size: 0.78rem; font-weight: 700; background: #F8F5F5; color: #1A1A1A; padding: 6px 14px; border-radius: 999px; }
+
+  .related-section { margin-top: 3.5rem; }
+  .related-section__title { font-size: 1.1rem; font-weight: 900; margin-bottom: 1.2rem; }
+  .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+  .related-card { text-decoration: none; color: inherit; border-radius: 12px; overflow: hidden; background: #F8F5F5; }
+  .related-card__img { width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block; }
+  .related-card__img--fallback { background: linear-gradient(135deg, #C4F2F2, #E8D5F5); }
+  .related-card__title { padding: 0.8rem 0.9rem; font-size: 0.85rem; font-weight: 700; line-height: 1.4; }
+</style>

@@ -11,6 +11,11 @@
     "@astrojs/check": "^0.9.9",
     "@astrojs/cloudflare": "^12.5.0",
     "@supabase/supabase-js": "^2.107.0",
+    "@tiptap/core": "^3.29.2",
+    "@tiptap/extension-image": "^3.29.2",
+    "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-placeholder": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "astro": "^5.9.0",
     "typescript": "^5.9.3",
     "worker-mailer": "^1.2.1"

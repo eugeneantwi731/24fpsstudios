@@ -1,0 +1,240 @@
+---
+// src/pages/admin/blog/index.astro
+// Lists every post (draft + published) for admin/editor review,
+// with quick actions to edit, publish/unpublish, or delete.
+export const prerender = false;
+import { getAdminSupabase } from '../../../lib/supabase-admin';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
+
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+const statusFilter = Astro.url.searchParams.get('status'); // draft | published | null
+
+let query = supabase
+  .from('blog_posts')
+  .select('id, slug, title, excerpt, cover_image_url, category, status, featured, author_name, published_at, updated_at')
+  .order('updated_at', { ascending: false });
+
+if (statusFilter && ['draft', 'published'].includes(statusFilter)) {
+  query = query.eq('status', statusFilter);
+}
+
+const { data: posts } = await query;
+
+const { count: totalCount } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true });
+const { count: draftCount } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'draft');
+const { count: publishedCount } = await supabase.from('blog_posts').select('*', { count: 'exact', head: true }).eq('status', 'published');
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blog — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --pink: #E9295D; --teal: #3FD3D5; --yellow: #FEC843; --purple: #9F6ACD;
+      --black: #1A1A1A; --white: #FFFFFF; --off: #F8F5F5; --muted: #6B7280;
+      --border: rgba(26,26,26,0.10);
+      --pink-light: rgba(233,41,93,0.08);
+      --teal-light: rgba(63,211,213,0.10);
+      --yellow-light: rgba(254,200,67,0.12);
+    }
+    html, body { font-family: 'Raleway', sans-serif; background: var(--off); color: var(--black); -webkit-font-smoothing: antialiased; }
+
+    .page-wrap { max-width: 1200px; margin: 0 auto; padding: 32px 28px 60px; }
+
+    .page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .page-header__left { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      display: flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+      border-radius: 10px; background: var(--white); border: 1.5px solid var(--border);
+      color: var(--black); text-decoration: none; flex-shrink: 0;
+    }
+    .back-btn svg { width: 18px; height: 18px; }
+    .page-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.01em; }
+    .page-sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+    .btn-new {
+      display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px;
+      border-radius: 999px; background: var(--pink); color: white; text-decoration: none;
+      font-weight: 800; font-size: 0.86rem; box-shadow: 0 8px 20px rgba(233,41,93,0.25);
+      transition: transform 0.15s;
+    }
+    .btn-new:hover { transform: translateY(-1px); }
+    .btn-new svg { width: 16px; height: 16px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-mini {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    }
+    .stat-mini__num { font-size: 1.6rem; font-weight: 900; }
+    .stat-mini__label { font-size: 0.76rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .filter-pill {
+      padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border);
+      background: var(--white); color: var(--black); text-decoration: none;
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .filter-pill.is-active { background: var(--black); color: white; border-color: var(--black); }
+
+    .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+    .post-card {
+      background: var(--white); border: 1.5px solid var(--border); border-radius: 16px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .post-card__cover { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: var(--off); display: block; }
+    .post-card__cover-fallback {
+      width: 100%; aspect-ratio: 16/9; background: var(--off); display: flex; align-items: center; justify-content: center; color: var(--muted);
+    }
+    .post-card__cover-fallback svg { width: 32px; height: 32px; }
+    .post-card__body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .post-card__badges { display: flex; gap: 6px; align-items: center; }
+    .badge { font-size: 0.65rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge--draft { background: var(--yellow-light); color: #8a6000; }
+    .badge--published { background: rgba(31,168,85,0.12); color: #1fa855; }
+    .badge--featured { background: var(--pink-light); color: var(--pink); }
+    .badge--category { background: var(--teal-light); color: #0a7e80; }
+    .post-card__title { font-size: 1rem; font-weight: 800; line-height: 1.3; }
+    .post-card__excerpt { font-size: 0.82rem; color: var(--muted); line-height: 1.5; flex: 1; }
+    .post-card__meta { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+    .post-card__actions { display: flex; gap: 6px; margin-top: 8px; }
+    .action-btn {
+      flex: 1; text-align: center; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--white); color: var(--black); font-size: 0.76rem; font-weight: 800; text-decoration: none; cursor: pointer;
+    }
+    .action-btn--danger { color: var(--pink); }
+    .action-btn:hover { background: var(--off); }
+
+    .empty-state { text-align: center; padding: 80px 20px; color: var(--muted); }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state__title { font-size: 1rem; font-weight: 800; color: var(--black); margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <div class="page-header">
+      <div class="page-header__left">
+        <a href="/admin/dashboard" class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div>
+          <div class="page-title">Blog & Feed</div>
+          <div class="page-sub">Manage stories for the public /feed page</div>
+        </div>
+      </div>
+      <a href="/admin/blog/editor" class="btn-new">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        New Post
+      </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-mini"><div class="stat-mini__num">{totalCount ?? 0}</div><div class="stat-mini__label">Total Posts</div></div>
+      <div class="stat-mini"><div class="stat-mini__num">{publishedCount ?? 0}</div><div class="stat-mini__label">Published</div></div>
+      <div class="stat-mini"><div class="stat-mini__num">{draftCount ?? 0}</div><div class="stat-mini__label">Drafts</div></div>
+    </div>
+
+    <div class="filter-row">
+      <a href="/admin/blog" class={`filter-pill ${!statusFilter ? 'is-active' : ''}`}>All</a>
+      <a href="/admin/blog?status=published" class={`filter-pill ${statusFilter === 'published' ? 'is-active' : ''}`}>Published</a>
+      <a href="/admin/blog?status=draft" class={`filter-pill ${statusFilter === 'draft' ? 'is-active' : ''}`}>Drafts</a>
+    </div>
+
+    {posts && posts.length > 0 ? (
+      <div class="posts-grid">
+        {posts.map((post) => (
+          <div class="post-card" data-post-id={post.id}>
+            {post.cover_image_url ? (
+              <img src={post.cover_image_url} alt="" class="post-card__cover" />
+            ) : (
+              <div class="post-card__cover-fallback">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="9.5" r="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M21 15l-5-5-9 9" stroke="currentColor" stroke-width="1.6"/></svg>
+              </div>
+            )}
+            <div class="post-card__body">
+              <div class="post-card__badges">
+                <span class={`badge badge--${post.status}`}>{post.status}</span>
+                {post.featured && <span class="badge badge--featured">Featured</span>}
+                <span class="badge badge--category">{post.category}</span>
+              </div>
+              <div class="post-card__title">{post.title}</div>
+              {post.excerpt && <div class="post-card__excerpt">{post.excerpt}</div>}
+              <div class="post-card__meta">
+                {post.author_name ? `By ${post.author_name} · ` : ''}
+                {post.status === 'published' && post.published_at
+                  ? new Date(post.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : `Updated ${new Date(post.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+              </div>
+              <div class="post-card__actions">
+                <a href={`/admin/blog/editor?id=${post.id}`} class="action-btn">Edit</a>
+                <button type="button" class="action-btn action-btn--danger" data-delete-id={post.id} data-delete-title={post.title}>Delete</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9h10M7 13h10M7 17h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <div class="empty-state__title">No posts {statusFilter ? `with status "${statusFilter}"` : 'yet'}</div>
+        <div>Click "New Post" to write your first story.</div>
+      </div>
+    )}
+  </div>
+
+  <script>
+    document.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest('button[data-delete-id]') as HTMLElement;
+      if (!btn) return;
+
+      const id = btn.dataset.deleteId;
+      const title = btn.dataset.deleteTitle || 'this post';
+      if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+
+      btn.textContent = 'Deleting…';
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        const res = await fetch(`/api/admin/blog/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error || 'Delete failed');
+        }
+        btn.closest('.post-card')?.remove();
+      } catch (err: any) {
+        alert(err?.message || 'Failed to delete post.');
+        btn.textContent = 'Delete';
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

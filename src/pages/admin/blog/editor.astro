@@ -1,0 +1,434 @@
+---
+// src/pages/admin/blog/editor.astro
+// Shared create/edit screen. With no ?id= it's "New Post"; with
+// ?id=<uuid> it loads that post and switches to edit mode. Keeping
+// both in one file avoids duplicating the entire Tiptap setup.
+export const prerender = false;
+import { getAdminSupabase } from '../../../lib/supabase-admin';
+import { BLOG_CATEGORIES } from '../../../lib/blog-utils';
+
+const token = Astro.cookies.get('admin_session')?.value;
+if (!token) return Astro.redirect('/admin');
+
+const runtimeEnv = (Astro.locals as any).runtime?.env;
+const supabase = getAdminSupabase(runtimeEnv);
+
+const { data: session } = await supabase
+  .from('admin_sessions')
+  .select('admin_id, expires_at')
+  .eq('token', token)
+  .maybeSingle();
+
+if (!session || new Date(session.expires_at) < new Date()) {
+  Astro.cookies.delete('admin_session', { path: '/' });
+  return Astro.redirect('/admin');
+}
+
+const { data: adminUser } = await supabase
+  .from('admin_users')
+  .select('username, role')
+  .eq('id', session.admin_id)
+  .maybeSingle();
+
+const editId = Astro.url.searchParams.get('id');
+let existingPost: any = null;
+
+if (editId) {
+  const { data: post } = await supabase.from('blog_posts').select('*').eq('id', editId).maybeSingle();
+  if (!post) return Astro.redirect('/admin/blog');
+  existingPost = post;
+}
+
+const isEdit = !!existingPost;
+const pageTitle = isEdit ? `Edit — ${existingPost.title}` : 'New Post';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{pageTitle} — 24fps Admin</title>
+  <link rel="icon" type="image/svg+xml" href="/images/24fps-favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:    #E9295D;
+      --teal:    #3FD3D5;
+      --yellow:  #FEC843;
+      --purple:  #9F6ACD;
+      --black:   #1A1A1A;
+      --white:   #FFFFFF;
+      --off:     #F8F5F5;
+      --muted:   #6B7280;
+      --border:  rgba(26,26,26,0.10);
+      --pink-light:   rgba(233,41,93,0.08);
+      --teal-light:   rgba(63,211,213,0.10);
+    }
+
+    html, body {
+      font-family: 'Raleway', sans-serif;
+      background: var(--off);
+      color: var(--black);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--white);
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .topbar__left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .topbar__back {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      color: var(--black); text-decoration: none; flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .topbar__back:hover { background: var(--off); }
+    .topbar__back svg { width: 20px; height: 20px; }
+    .topbar__title-wrap { min-width: 0; }
+    .topbar__title {
+      font-size: 1rem; font-weight: 800; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; max-width: 40vw;
+    }
+    .topbar__status {
+      font-size: 0.7rem; font-weight: 700; color: var(--muted);
+      display: flex; align-items: center; gap: 6px; margin-top: 2px;
+    }
+    .topbar__status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+    .topbar__status-dot.is-saved { background: #1fa855; }
+    .topbar__status-dot.is-saving { background: var(--yellow); }
+    .topbar__status-dot.is-error { background: var(--pink); }
+
+    .topbar__right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: 999px; border: none;
+      font-family: inherit; font-size: 0.82rem; font-weight: 800;
+      cursor: pointer; transition: transform 0.12s, opacity 0.12s, box-shadow 0.12s;
+      white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn:not(:disabled):hover { transform: translateY(-1px); }
+    .btn--ghost { background: var(--off); color: var(--black); }
+    .btn--outline { background: var(--white); color: var(--black); border: 1.5px solid var(--border); }
+    .btn--dark { background: var(--black); color: var(--white); }
+    .btn--pink { background: var(--pink); color: var(--white); box-shadow: 0 6px 16px rgba(233,41,93,0.25); }
+    .btn svg { width: 15px; height: 15px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 28px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px;
+      align-items: start;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── MAIN COLUMN ── */
+    .main-col { min-width: 0; }
+
+    .field-block { margin-bottom: 20px; }
+    .label {
+      display: block; font-size: 0.72rem; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .title-input {
+      width: 100%; border: none; background: transparent;
+      font-family: 'Raleway', sans-serif; font-size: 2rem; font-weight: 900;
+      letter-spacing: -0.02em; color: var(--black); resize: none;
+      line-height: 1.2; padding: 0;
+    }
+    .title-input::placeholder { color: rgba(26,26,26,0.25); }
+    .title-input:focus { outline: none; }
+
+    .slug-row {
+      display: flex; align-items: center; gap: 6px; margin-top: 8px;
+      font-size: 0.82rem; color: var(--muted);
+    }
+    .slug-row input {
+      border: none; background: transparent; font-family: inherit;
+      font-size: 0.82rem; color: var(--black); font-weight: 700;
+      padding: 4px 6px; border-radius: 6px; min-width: 0; flex: 1;
+    }
+    .slug-row input:focus { outline: none; background: var(--off); }
+
+    .excerpt-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; font-family: inherit; font-size: 0.9rem;
+      color: var(--black); resize: vertical; min-height: 64px; background: var(--white);
+    }
+    .excerpt-input:focus { outline: none; border-color: var(--pink); }
+
+    /* ── EDITOR TOOLBAR ── */
+    .editor-shell {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .editor-toolbar {
+      display: flex; flex-wrap: wrap; gap: 2px;
+      padding: 8px; border-bottom: 1.5px solid var(--border);
+      background: var(--off);
+      position: sticky; top: 65px; z-index: 5;
+    }
+    .tb-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px; border: none;
+      background: transparent; color: var(--black); cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .tb-btn:hover { background: rgba(26,26,26,0.06); }
+    .tb-btn.is-active { background: var(--black); color: var(--white); }
+    .tb-btn svg { width: 16px; height: 16px; }
+    .tb-sep { width: 1px; background: var(--border); margin: 4px 4px; }
+
+    .editor-body {
+      padding: 24px 28px 60px;
+      min-height: 420px;
+      font-size: 1.02rem;
+      line-height: 1.75;
+      color: var(--black);
+    }
+    .editor-body:focus { outline: none; }
+    .editor-body .ProseMirror { outline: none; min-height: 380px; }
+    .editor-body p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      float: left; color: rgba(26,26,26,0.3);
+      pointer-events: none; height: 0;
+    }
+    .editor-body h1 { font-size: 1.7rem; font-weight: 900; margin: 1.2em 0 0.5em; letter-spacing: -0.01em; }
+    .editor-body h2 { font-size: 1.4rem; font-weight: 800; margin: 1.2em 0 0.5em; }
+    .editor-body h3 { font-size: 1.15rem; font-weight: 800; margin: 1.1em 0 0.4em; }
+    .editor-body p { margin: 0.8em 0; }
+    .editor-body ul, .editor-body ol { margin: 0.8em 0; padding-left: 1.4em; }
+    .editor-body li { margin: 0.3em 0; }
+    .editor-body blockquote {
+      border-left: 3px solid var(--pink); margin: 1em 0; padding: 0.4em 0 0.4em 1.1em;
+      color: var(--muted); font-style: italic;
+    }
+    .editor-body pre {
+      background: var(--black); color: #f1f1f1; padding: 14px 16px; border-radius: 10px;
+      overflow-x: auto; margin: 1em 0; font-size: 0.85rem; line-height: 1.6;
+    }
+    .editor-body code { background: rgba(26,26,26,0.06); padding: 2px 5px; border-radius: 4px; font-size: 0.88em; }
+    .editor-body pre code { background: none; padding: 0; }
+    .editor-body img { max-width: 100%; border-radius: 10px; margin: 1em 0; display: block; }
+    .editor-body a { color: var(--pink); text-decoration: underline; }
+    .editor-body hr { border: none; border-top: 1.5px solid var(--border); margin: 1.6em 0; }
+
+    /* ── SIDEBAR ── */
+    .side-col { display: flex; flex-direction: column; gap: 16px; }
+    .side-card {
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 18px;
+    }
+    .side-card__title {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+    }
+
+    .status-toggle {
+      display: flex; background: var(--off); border-radius: 10px; padding: 4px; gap: 4px;
+    }
+    .status-toggle button {
+      flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px;
+      font-family: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer;
+      color: var(--muted); transition: background 0.15s, color 0.15s;
+    }
+    .status-toggle button.is-active-draft { background: var(--white); color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .status-toggle button.is-active-published { background: var(--pink); color: var(--white); }
+
+    .select-input, .text-input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 9px 12px; font-family: inherit; font-size: 0.85rem;
+      color: var(--black); background: var(--white);
+    }
+    .select-input:focus, .text-input:focus { outline: none; border-color: var(--pink); }
+
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 0.82rem; font-weight: 700; }
+    .checkbox-row input { width: 16px; height: 16px; accent-color: var(--pink); }
+
+    .cover-zone {
+      position: relative; border: 2px dashed var(--border); border-radius: 12px;
+      min-height: 140px; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; cursor: pointer; background: var(--off);
+      transition: border-color 0.15s;
+    }
+    .cover-zone.dragover { border-color: var(--pink); }
+    .cover-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .cover-zone__placeholder { text-align: center; padding: 16px; pointer-events: none; }
+    .cover-zone__placeholder svg { width: 28px; height: 28px; color: var(--muted); margin-bottom: 6px; }
+    .cover-zone__placeholder p { font-size: 0.76rem; font-weight: 700; color: var(--muted); }
+    .cover-preview { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .cover-remove {
+      position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+      border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2;
+    }
+    .cover-remove svg { width: 14px; height: 14px; }
+    .cover-url-row { display: flex; gap: 6px; margin-top: 8px; }
+    .cover-url-row input { flex: 1; }
+    .cover-url-row button {
+      padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--white); font-family: inherit; font-weight: 800; font-size: 0.75rem; cursor: pointer;
+    }
+
+    .tags-input-wrap {
+      display: flex; flex-wrap: wrap; gap: 6px; padding: 8px;
+      border: 1.5px solid var(--border); border-radius: 10px; background: var(--white);
+    }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--pink-light); color: var(--pink);
+      padding: 4px 8px 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 800;
+    }
+    .tag-chip button { background: none; border: none; cursor: pointer; color: inherit; display: flex; padding: 2px; }
+    .tag-chip button svg { width: 10px; height: 10px; }
+    .tags-input-wrap input {
+      border: none; outline: none; flex: 1; min-width: 80px; font-family: inherit;
+      font-size: 0.82rem; padding: 4px;
+    }
+
+    .form-msg {
+      font-size: 0.8rem; font-weight: 700; padding: 10px 14px; border-radius: 10px;
+      margin-bottom: 16px; display: none;
+    }
+    .form-msg.is-error { display: block; background: rgba(233,41,93,0.08); color: var(--pink); }
+    .form-msg.is-success { display: block; background: rgba(31,168,85,0.1); color: #1fa855; }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__left">
+      <a href="/admin/blog" class="topbar__back" aria-label="Back to posts">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="topbar__title-wrap">
+        <div class="topbar__title">{isEdit ? 'Edit Post' : 'New Post'}</div>
+        <div class="topbar__status">
+          <span class="topbar__status-dot" id="save-dot"></span>
+          <span id="save-label">{isEdit ? 'Loaded' : 'Unsaved'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <button type="button" class="btn btn--outline" id="preview-btn" title="Preview in a new tab (published posts only)">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+        Preview
+      </button>
+      <button type="button" class="btn btn--ghost" id="save-draft-btn">Save Draft</button>
+      <button type="button" class="btn btn--pink" id="publish-btn">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        {isEdit && existingPost.status === 'published' ? 'Update' : 'Publish'}
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="main-col">
+      <div class="form-msg" id="form-msg"></div>
+
+      <div class="field-block">
+        <textarea class="title-input" id="title-input" rows="1" placeholder="Post title…">{existingPost?.title || ''}</textarea>
+        <div class="slug-row">
+          <span>24fpsstudios.com/feed/</span>
+          <input type="text" id="slug-input" placeholder="auto-generated-from-title" value={existingPost?.slug || ''} />
+        </div>
+      </div>
+
+      <div class="field-block">
+        <label class="label" for="excerpt-input">Excerpt (shown on cards)</label>
+        <textarea class="excerpt-input" id="excerpt-input" placeholder="A one or two sentence summary that hooks the reader…">{existingPost?.excerpt || ''}</textarea>
+      </div>
+
+      <div class="field-block">
+        <label class="label">Content</label>
+        <div class="editor-shell">
+          <div class="editor-toolbar" id="toolbar"></div>
+          <div class="editor-body" id="editor"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col">
+      <div class="side-card">
+        <div class="side-card__title">Status</div>
+        <div class="status-toggle" id="status-toggle">
+          <button type="button" data-status="draft" class="is-active-draft">Draft</button>
+          <button type="button" data-status="published">Published</button>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card__title">Cover Image</div>
+        <div class="cover-zone" id="cover-zone">
+          <input type="file" id="cover-file-input" accept="image/*" />
+          <div class="cover-zone__placeholder" id="cover-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" style="margin:0 auto"><path d="M4 16l4.586-4.586a2 2 0 0 1 2.828 0L16 16m-2-2l1.586-1.586a2 2 0 0 1 2.828 0L20 14M4 8h.01M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <p>Drag & drop or click to upload</p>
+          </div>
+          <img class="cover-preview" id="cover-preview" style="display:none" alt="Cover preview" />
+          <button type="button" class="cover-remove" id="cover-remove-btn" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="cover-url-row">
+          <input type="text" class="text-input" id="cover-url-input" placeholder="or paste an image URL" />
+          <button type="button" id="cover-url-apply">Use</button>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card__title">Category</div>
+        <select class="select-input" id="category-select">
+          {BLOG_CATEGORIES.map((c) => <option value={c.value}>{c.label}</option>)}
+        </select>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="featured-checkbox" />
+          <label for="featured-checkbox">Feature on /feed (hero slot)</label>
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card__title">Tags</div>
+        <div class="tags-input-wrap" id="tags-wrap">
+          <input type="text" id="tag-input" placeholder="Add a tag, press Enter…" />
+        </div>
+      </div>
+
+      <div class="side-card">
+        <div class="side-card__title">Reading Time</div>
+        <input type="number" class="text-input" id="read-minutes-input" min="1" placeholder="Auto-calculated if left blank" value={existingPost?.read_minutes ?? ''} />
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ isEdit, existingPost, postId: existingPost?.id || null }}>
+    window.__BLOG_EDIT__ = { isEdit, existingPost, postId };
+  </script>
+
+  <script>
+    import '../../../scripts/blog-editor.ts';
+  </script>
+</body>
+</html>
