@@ -14,6 +14,7 @@ const supabaseAnonKey = runtimeEnv?.PUBLIC_SUPABASE_ANON_KEY ?? import.meta.env.
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const activeCategory = Astro.url.searchParams.get('category') || 'all';
+const searchQuery = Astro.url.searchParams.get('q') || '';
 
 const { data: allPosts, error } = await supabase
   .from('blog_posts')
@@ -26,9 +27,20 @@ const posts = allPosts || [];
 const featuredPost = posts.find((p) => p.featured) || posts[0] || null;
 const restPosts = posts.filter((p) => p.id !== featuredPost?.id);
 
-const filteredRest = activeCategory === 'all'
+let filteredRest = activeCategory === 'all'
   ? restPosts
   : restPosts.filter((p) => p.category === activeCategory);
+
+// Simple server-side search across title, excerpt, and tags — runs
+// alongside the category filter (both can be active at once).
+if (searchQuery.trim()) {
+  const q = searchQuery.trim().toLowerCase();
+  filteredRest = filteredRest.filter((p) =>
+    p.title?.toLowerCase().includes(q) ||
+    p.excerpt?.toLowerCase().includes(q) ||
+    (Array.isArray(p.tags) && p.tags.some((t: string) => t.toLowerCase().includes(q)))
+  );
+}
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -50,24 +62,67 @@ restPosts.forEach((p) => { categoryCounts[p.category] = (categoryCounts[p.catego
 
 <BaseLayout title="The Frame Feed" description="Stories, ideas, and behind-the-scenes updates from the 24fps community.">
   <div class="feed-page">
-    <header class="feed-hero">
-      <span class="feed-hero__eyebrow">The Frame Feed</span>
-      <h1 class="feed-hero__title">Stories. Ideas.<br/>Frames. <span class="feed-hero__accent">Realized.</span></h1>
-      <p class="feed-hero__sub">Insights, tutorials, behind-the-scenes, and studio updates from the 24fps community.</p>
-    </header>
+
+    <section class="feed-hero">
+      <!-- Decorative scatter — matches the reference mockup exactly -->
+      <img src="/images/film-strip.svg" alt="" class="deco deco--filmstrip" aria-hidden="true" />
+      <img src="/images/cross-scribble-1.svg" alt="" class="deco deco--cross-1" aria-hidden="true" />
+      <img src="/images/cross-scribble-2.svg" alt="" class="deco deco--cross-2" aria-hidden="true" />
+      <img src="/images/star-scribble-1.svg" alt="" class="deco deco--star" aria-hidden="true" />
+
+      <div class="feed-hero__inner">
+        <div class="feed-hero__text">
+          <span class="feed-hero__eyebrow">· The Frame Feed ·</span>
+          <h1 class="feed-hero__title">Stories. Ideas.<br/>Frames. <span class="feed-hero__accent">Realized.</span></h1>
+          <p class="feed-hero__sub">Insights, tutorials, behind-the-scenes, and studio updates from the 24fps community.</p>
+
+          <form class="feed-search" method="get" action="/feed" role="search">
+            {activeCategory !== 'all' && <input type="hidden" name="category" value={activeCategory} />}
+            <svg class="feed-search__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+              type="text"
+              name="q"
+              value={searchQuery}
+              placeholder="Search stories, topics, or keywords..."
+              class="feed-search__input"
+              aria-label="Search stories"
+            />
+            <button type="submit" class="feed-search__submit" aria-label="Search">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5L8 1Z" fill="currentColor"/></svg>
+            </button>
+          </form>
+
+          <nav class="category-pills" aria-label="Filter by category">
+            <a href={`/feed${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`} class={`category-pill ${activeCategory === 'all' ? 'is-active' : ''}`}>All</a>
+            {BLOG_CATEGORIES.map((c) => (
+              <a
+                href={`/feed?category=${c.value}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}`}
+                class={`category-pill ${activeCategory === c.value ? 'is-active' : ''}`}
+              >
+                {c.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="feed-hero__art">
+          <img src="/images/24fps-illustration.png" alt="Illustration of 24fps animators at work" class="feed-hero__illustration" />
+        </div>
+      </div>
+    </section>
 
     {error && <p class="feed-error">Couldn't load stories right now. Please try again shortly.</p>}
+    {searchQuery && (
+      <p class="search-status">
+        {filteredRest.length} result{filteredRest.length === 1 ? '' : 's'} for "{searchQuery}"
+        <a href={activeCategory !== 'all' ? `/feed?category=${activeCategory}` : '/feed'} class="search-status__clear">Clear search</a>
+      </p>
+    )}
 
-    <nav class="category-pills" aria-label="Filter by category">
-      <a href="/feed" class={`category-pill ${activeCategory === 'all' ? 'is-active' : ''}`}>All</a>
-      {BLOG_CATEGORIES.map((c) => (
-        <a href={`/feed?category=${c.value}`} class={`category-pill ${activeCategory === c.value ? 'is-active' : ''}`}>
-          {c.label}{categoryCounts[c.value] ? ` (${categoryCounts[c.value]})` : ''}
-        </a>
-      ))}
-    </nav>
-
-    {featuredPost && activeCategory === 'all' && (
+    {featuredPost && activeCategory === 'all' && !searchQuery && (
       <a href={`/feed/${featuredPost.slug}`} class="featured-card">
         <div class="featured-card__badge">Featured Story</div>
         <div class="featured-card__media">
@@ -123,27 +178,145 @@ restPosts.forEach((p) => { categoryCounts[p.category] = (categoryCounts[p.catego
 </BaseLayout>
 
 <style>
-  .feed-page { max-width: 1180px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+  .feed-page { max-width: 1180px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
 
-  .feed-hero { text-align: center; margin-bottom: 2.5rem; }
-  .feed-hero__eyebrow {
-    display: inline-block; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em;
-    text-transform: uppercase; color: #E9295D; margin-bottom: 0.75rem;
+  /* ── HERO ── */
+  .feed-hero {
+    position: relative;
+    overflow: visible;
+    padding: 2.5rem 0 2rem;
+    margin-bottom: 1.5rem;
   }
-  .feed-hero__title { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; color: #1A1A1A; }
+
+  .feed-hero__inner {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .feed-hero__text { min-width: 0; }
+
+  .feed-hero__eyebrow {
+    display: inline-block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: #E9295D; margin-bottom: 0.9rem;
+  }
+  .feed-hero__title {
+    font-size: clamp(2.1rem, 4.4vw, 3.15rem); font-weight: 900; letter-spacing: -0.02em;
+    line-height: 1.08; color: #1A1A1A;
+  }
   .feed-hero__accent { color: #E9295D; }
-  .feed-hero__sub { font-size: 1rem; color: #6B7280; margin-top: 1rem; max-width: 46ch; margin-left: auto; margin-right: auto; }
+  .feed-hero__sub {
+    font-size: 1rem; color: #6B7280; margin-top: 1rem; max-width: 42ch; line-height: 1.55;
+  }
 
-  .feed-error { text-align: center; color: #E9295D; font-weight: 700; margin-bottom: 1.5rem; }
+  /* ── SEARCH BAR ── */
+  .feed-search {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 1.75rem;
+    background: #fff;
+    border: 1.5px solid rgba(26,26,26,0.12);
+    border-radius: 999px;
+    padding: 0.2rem 0.35rem 0.2rem 1.1rem;
+    max-width: 420px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .feed-search:focus-within {
+    border-color: #E9295D;
+    box-shadow: 0 0 0 3px rgba(233,41,93,0.08);
+  }
+  .feed-search__icon { width: 18px; height: 18px; color: #9CA3AF; flex-shrink: 0; }
+  .feed-search__input {
+    flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 0.88rem; color: #1A1A1A; padding: 0.7rem 0;
+  }
+  .feed-search__input::placeholder { color: #9CA3AF; }
+  .feed-search__submit {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: none;
+    background: #E9295D; color: white; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s, transform 0.15s;
+  }
+  .feed-search__submit:hover { background: #c91f4c; transform: scale(1.05); }
+  .feed-search__submit svg { width: 14px; height: 14px; }
 
-  .category-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2.5rem; }
+  .search-status {
+    font-size: 0.85rem; color: #6B7280; font-weight: 600; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .search-status__clear { color: #E9295D; font-weight: 800; text-decoration: none; }
+  .search-status__clear:hover { text-decoration: underline; }
+
+  /* ── CATEGORY PILLS (under search, left-aligned) ── */
+  .category-pills {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem;
+  }
   .category-pill {
-    padding: 8px 16px; border-radius: 999px; border: 1.5px solid rgba(26,26,26,0.12);
-    background: white; color: #1A1A1A; text-decoration: none; font-size: 0.82rem; font-weight: 700;
+    padding: 7px 15px; border-radius: 999px; border: 1.5px solid rgba(26,26,26,0.12);
+    background: white; color: #1A1A1A; text-decoration: none; font-size: 0.78rem; font-weight: 700;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
   }
   .category-pill:hover { border-color: #E9295D; }
-  .category-pill.is-active { background: #1A1A1A; color: white; border-color: #1A1A1A; }
+  .category-pill.is-active { background: #E9295D; color: white; border-color: #E9295D; }
+
+  /* ── HERO ILLUSTRATION ── */
+  .feed-hero__art {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feed-hero__illustration {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    display: block;
+  }
+
+  /* ── DECORATIVE SCATTER ── */
+  .deco { position: absolute; pointer-events: none; z-index: 1; user-select: none; }
+
+  .deco--filmstrip {
+    top: -1.5rem;
+    left: -2.5rem;
+    width: 190px;
+    height: auto;
+    opacity: 0.95;
+    z-index: 0;
+    transform: scaleX(-1); /* source SVG is oriented for the right side — flipped to sit on the left */
+  }
+  .deco--cross-1 {
+    top: 1rem;
+    left: 42%;
+    width: 22px;
+    height: auto;
+    opacity: 0.8;
+  }
+  .deco--cross-2 {
+    top: 3.5rem;
+    left: 2%;
+    width: 20px;
+    height: auto;
+    opacity: 0.7;
+  }
+  .deco--star {
+    top: 8rem;
+    right: 43%;
+    width: 26px;
+    height: auto;
+    opacity: 0.85;
+  }
+
+  @media (max-width: 900px) {
+    .feed-hero__inner { grid-template-columns: 1fr; }
+    .feed-hero__art { order: -1; max-width: 260px; margin: 0 auto 1rem; }
+    .deco--filmstrip { width: 130px; top: -1rem; left: -1.5rem; }
+    .feed-search { max-width: 100%; }
+  }
+
+
 
   .featured-card {
     display: grid; grid-template-columns: 1.15fr 1fr; gap: 0; border-radius: 20px; overflow: hidden;
