@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getAdminSupabase } from '../../lib/supabase-admin';
+import { rateLimit, clientIp, tooManyRequests } from '../../lib/rate-limit';
 
 export const prerender = false;
 
@@ -10,11 +11,25 @@ export const prerender = false;
 // applicants haven't been vetted yet and their fields don't match
 // the member profile shape.
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Throttle public submissions: 5 per IP per hour (best-effort, see rate-limit.ts).
+  if (!rateLimit(`join:${clientIp(request)}`, 5, 60 * 60_000)) {
+    return tooManyRequests('Too many submissions from your network. Please try again later.');
+  }
+
   let body: Record<string, any>;
   try {
     body = await request.json();
   } catch {
     return jsonError(400, 'Invalid JSON body');
+  }
+
+  // Honeypot: real users never fill this hidden field; bots often do.
+  // Pretend success so the bot doesn't retry.
+  if (typeof body.website === 'string' && body.website.trim() !== '') {
+    return new Response(JSON.stringify({ success: true }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const {
@@ -71,21 +86,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const runtimeEnv = (locals as any).runtime?.env;
     const supabase = getAdminSupabase(runtimeEnv);
-
-    // TEMP DIAGNOSTIC — safe to leave in briefly, logs no secrets.
-    // Confirms which env source is actually supplying the key and
-    // roughly what kind of key it is (service_role keys are JWTs
-    // that decode to role: "service_role"; anon keys decode to
-    // role: "anon"). Remove this block once the bug is fixed.
-    try {
-      const keyUsed = runtimeEnv?.SUPABASE_SERVICE_ROLE_KEY ?? import.meta.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-      const source = runtimeEnv?.SUPABASE_SERVICE_ROLE_KEY ? 'runtimeEnv (Cloudflare)' : 'import.meta.env (.env file)';
-      const payload = keyUsed.split('.')[1];
-      const decodedRole = payload ? JSON.parse(atob(payload))?.role : 'UNKNOWN — could not decode';
-      console.log('[api/join DIAGNOSTIC] key source:', source, '| decoded JWT role:', decodedRole);
-    } catch (diagErr) {
-      console.log('[api/join DIAGNOSTIC] could not decode key:', diagErr);
-    }
 
     const { data, error } = await supabase
       .from('join_submissions')
