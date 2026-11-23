@@ -15,3 +15,30 @@ export const hero = {
   // Leave empty until the reel exists — the button then shows a "coming soon" note.
   reelUrl: '',
 };
+
+// ── Trust bar + About zone (directly under the hero) ─────────
+export const zone = {
+  trust: {
+    affiliation: { value: 'KNUST', label: 'Dept. of Communication Design' },
+    founded: { value: '2025', label: 'Founded' },
+    // The member count is read live from the database (published members only).
+  },
+
+  about: {
+    label: 'About 24fps',
+    title: 'A creative home for',
+    titleAccent: 'storytellers.',
+    body:
+      "24fps is a student-led animation club and studio in KNUST's Department of Communication Design. " +
+      'We give students hands-on experience in a production environment that mirrors the real industry: ' +
+      'making original films together and building the skills to work in it.',
+    cta: { label: 'Learn more', href: '/about' },
+  },
+
+  // The three pillars (same wording as the member ID-badge concept).
+  pillars: [
+    { key: 'decode',  title: 'Decode.',  text: 'We explore stories.' },
+    { key: 'create',  title: 'Create.',  text: 'We craft with purpose.' },
+    { key: 'inspire', title: 'Inspire.', text: 'We grow together.' },
+  ],
+};

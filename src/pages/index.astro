@@ -1,6 +1,27 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { hero } from '../data/home.js';
+import TrustAbout from '../components/home/TrustAbout.astro';
+import { createClient } from '@supabase/supabase-js';
+
+// Live member count for the trust bar. Same public, read-only access as /team:
+// the anon key can only see published members. If anything goes wrong the stat is
+// simply left out of the bar.
+let memberCount: number | null = null;
+try {
+  const env = (Astro.locals as any).runtime?.env;
+  const url = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
+  const key = env?.PUBLIC_SUPABASE_ANON_KEY ?? import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    const { count, error } = await createClient(url, key)
+      .from('members')
+      .select('*', { count: 'exact', head: true })
+      .eq('published', true);
+    if (!error && typeof count === 'number' && count > 0) memberCount = count;
+  }
+} catch {
+  /* hidden */
+}
 
 const decodeCreateInspire = '/images/decode-create-inpire.svg';
 const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only, empty margins trimmed
@@ -57,6 +78,8 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
       </div>
     </div>
   </section>
+
+  <TrustAbout memberCount={memberCount} />
 
   <dialog class="reel-dialog" id="reel-dialog" aria-label="Demo reel">
     <button type="button" class="reel-close" id="reel-close" aria-label="Close">
