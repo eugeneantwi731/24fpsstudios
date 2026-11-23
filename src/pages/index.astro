@@ -83,7 +83,10 @@ const heroIllustration = '/images/24fps-illustration.png';
     max-width: 1600px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 0.88fr 1.32fr;
+    /* minmax(0, …) lets the text column shrink below its content width: the
+       buttons are allowed to run on into the illustration instead of forcing the
+       column wider and shrinking the artwork. */
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.32fr);
     align-items: center;
     gap: 0;
   }
@@ -261,6 +264,8 @@ const heroIllustration = '/images/24fps-illustration.png';
     height: auto;
     display: block;
     margin-top: -4rem;    /* new */
+    position: relative;
+    top: -2.5rem;         /* nudged up; moves the picture, not the layout */
   }
 
   /* ── Scroll cue (bottom centre of the hero) ── */
