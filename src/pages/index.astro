@@ -290,7 +290,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     position: absolute;
     z-index: 10;               /* always above the illustration and the lettering */
     left: 125%;
-    top: calc(100% + 24px);
+    top: calc(100% + 38px);
     transform: translateX(-50%);
     display: flex;
     align-items: center;
@@ -378,7 +378,15 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
   }
 
   @media (max-width: 960px) {
+    /* One column, in this order: lettering, intro, buttons, illustration, scroll cue */
+    .hero-copy { display: contents; }
+    .hero-headline { order: 1; justify-self: center; }
+    .hero-sub      { order: 2; justify-self: center; }
+    .hero-actions  { order: 3; justify-self: center; }
+    .hero-visual   { order: 4; }
     .scroll-cue {
+      order: 5;
+      justify-self: center;
       position: static;
       transform: none;
       margin: 22px auto 0;
@@ -411,7 +419,6 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     }
 
     .hero-visual {
-      order: 2;
       justify-content: center;
     }
 

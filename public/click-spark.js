@@ -71,11 +71,25 @@ class ClickSpark {
     for (const sel of this.config.excludeSelectors) {
       if (e.target.closest(sel)) return;
     }
+    // Join our crew: the burst comes out of the star icon, not from the cursor,
+    // and uses colours that stay visible on the pink button.
+    let ox = e.clientX, oy = e.clientY, palette = null;
+    const cta = e.target.closest('.nav-cta');
+    const star = cta && cta.querySelector('.cta-arrow');
+    if (star) {
+      const r = star.getBoundingClientRect();
+      ox = r.left + r.width / 2;
+      oy = r.top + r.height / 2;
+      palette = ['#FFD600', '#3FD3D5', '#FFD600', '#FFFFFF'];
+    }
+
     const now = performance.now();
-    for (let i = 0; i < this.config.starCount; i++) {
+    const count = palette ? this.config.starCount + 4 : this.config.starCount;
+    for (let i = 0; i < count; i++) {
       this.sparks.push({
-        x:         e.clientX,
-        y:         e.clientY,
+        x:         ox,
+        y:         oy,
+        color:     palette ? palette[i % palette.length] : null,
         angle:     Math.random() * Math.PI * 2,
         radius:    this._rand(this.config.minRadius, this.config.maxRadius),
         size:      this._rand(this.config.minSize, this.config.maxSize),
@@ -104,7 +118,7 @@ class ClickSpark {
         const opacity = p < 0.6 ? 1 : 1 - ((p - 0.6) / 0.4);
         const rot     = p * Math.PI * 0.5 + s.tilt;
 
-        this._drawSparkle(cx, cy, size, rot, opacity);
+        this._drawSparkle(cx, cy, size, rot, opacity, s.color);
         return true;
       });
 
@@ -119,7 +133,7 @@ class ClickSpark {
   // the sparkle centre sits at approximately (0.95, 1.225).
   // We translate so the centre is at origin, then scale uniformly.
 
-  _drawSparkle(cx, cy, r, rotation, opacity) {
+  _drawSparkle(cx, cy, r, rotation, opacity, color) {
     if (r < 0.5) return;
     const ctx = this.ctx;
 
@@ -137,8 +151,8 @@ class ClickSpark {
     ctx.translate(-svgW / 2, -svgH / 2);
 
     ctx.globalAlpha  = opacity;
-    ctx.strokeStyle  = '#E8386D';
-    ctx.fillStyle    = '#E8386D';
+    ctx.strokeStyle  = color || '#E8386D';
+    ctx.fillStyle    = color || '#E8386D';
     ctx.lineWidth    = 0.04 / scale; // stays visually consistent across sizes
     ctx.lineCap      = 'round';
     ctx.lineJoin     = 'round';

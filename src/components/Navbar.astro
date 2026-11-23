@@ -414,6 +414,19 @@ function isActive(href: string) {
     flex-shrink: 0;
   }
 
+  /* Star pops when the button is clicked (the sparks come from here) */
+  .nav-cta.is-sparking .cta-arrow svg {
+    animation: star-pop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  @keyframes star-pop {
+    0%   { transform: scale(1) rotate(0deg); }
+    40%  { transform: scale(1.55) rotate(90deg); }
+    100% { transform: scale(1) rotate(180deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-cta.is-sparking .cta-arrow svg { animation: none; }
+  }
+
   .cta-arrow svg {
     width: 18px;
     height: 18px;
@@ -520,5 +533,19 @@ function isActive(href: string) {
       hamburger?.setAttribute('aria-expanded', 'false');
       document.body.style.overflow = '';
     });
+  });
+
+  // Join our crew: pop the star and let its sparks play for a moment before the
+  // page changes. Modified clicks (new tab etc.) go through untouched.
+  const joinBtn = document.querySelector('.nav-cta') as HTMLAnchorElement | null;
+  joinBtn?.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    e.preventDefault();
+    joinBtn.classList.remove('is-sparking');
+    void joinBtn.offsetWidth; // restart the animation if clicked again
+    joinBtn.classList.add('is-sparking');
+    const href = joinBtn.href;
+    window.setTimeout(() => { window.location.href = href; }, 650);
   });
 </script>
