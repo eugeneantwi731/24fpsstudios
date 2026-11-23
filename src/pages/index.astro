@@ -269,7 +269,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
 
   .hero-visual {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end; /* flush to the right edge, no empty strip */
     align-items: center;
   }
 
@@ -278,7 +278,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     max-width: 100%;
     /* As large as the column allows, but never taller than the space between the
        navbar and the bottom of the window, so the whole hero is visible on load. */
-    max-height: calc(100svh - 132px);
+    max-height: calc(100svh - 108px);
     height: auto;
     display: block;
   }
@@ -288,6 +288,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     /* Sits a small fixed distance under the buttons. The text column is 40% of the
        row, so 125% of its width lands on the centre of the page. */
     position: absolute;
+    z-index: 10;               /* always above the illustration and the lettering */
     left: 125%;
     top: calc(100% + 24px);
     transform: translateX(-50%);
@@ -411,6 +412,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
 
     .hero-visual {
       order: 2;
+      justify-content: center;
     }
 
     .hero-illustration {
