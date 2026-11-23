@@ -2,22 +2,31 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { hero } from '../data/home.js';
 import TrustAbout from '../components/home/TrustAbout.astro';
+import PeopleStrip from '../components/home/PeopleStrip.astro';
+import { dedupeMembers, pickForHome, type PublicMember } from '../lib/people';
 import { createClient } from '@supabase/supabase-js';
 
-// Live member count for the trust bar. Same public, read-only access as /team:
-// the anon key can only see published members. If anything goes wrong the stat is
-// simply left out of the bar.
+// Published members, read with the same public, read-only access as /team (the anon key can
+// only see published rows). Used for the live member count and the "Meet the team" strip.
+// If anything goes wrong, the count and the strip are simply left out.
 let memberCount: number | null = null;
+let people: ReturnType<typeof pickForHome> = [];
 try {
   const env = (Astro.locals as any).runtime?.env;
   const url = env?.PUBLIC_SUPABASE_URL ?? import.meta.env.PUBLIC_SUPABASE_URL;
   const key = env?.PUBLIC_SUPABASE_ANON_KEY ?? import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   if (url && key) {
-    const { count, error } = await createClient(url, key)
+    const { data, error } = await createClient(url, key)
       .from('members')
-      .select('*', { count: 'exact', head: true })
-      .eq('published', true);
-    if (!error && typeof count === 'number' && count > 0) memberCount = count;
+      .select('slug, name, role, category, photo_url')
+      .eq('published', true)
+      .order('created_at', { ascending: true });
+    if (!error && data) {
+      const rows = data as PublicMember[];
+      const unique = dedupeMembers(rows); // a person who submitted twice counts once
+      if (unique.length > 0) memberCount = unique.length;
+      people = pickForHome(rows);
+    }
   }
 } catch {
   /* hidden */
@@ -80,6 +89,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
   </section>
 
   <TrustAbout memberCount={memberCount} />
+  <PeopleStrip people={people} />
 
   <dialog class="reel-dialog" id="reel-dialog" aria-label="Demo reel">
     <button type="button" class="reel-close" id="reel-close" aria-label="Close">

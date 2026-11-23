@@ -1,0 +1,235 @@
+---
+// "Meet the team" strip: a frosted-glass card with a few members.
+// People are chosen and tidied by src/lib/people.ts; the page passes them in.
+import type { HomePerson } from '../../lib/people';
+
+interface Props {
+  people: HomePerson[];
+}
+const { people } = Astro.props;
+---
+
+{people.length > 0 && (
+  <section class="people-zone"><div class="people-zone__inner">
+  <div class="people glass" data-reveal style="--d: 80ms">
+    <div class="people__intro">
+      <span class="pill"><i class="pill__dot" aria-hidden="true"></i>Meet the team</span>
+      <h2 class="people__title">A growing collective of creatives.</h2>
+      <a href="/team" class="people__link">
+        Get to know us
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8h10.2M8.4 3.6 12.8 8l-4.4 4.4" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+    <ul class="people__list">
+      {people.map((p) => (
+        <li>
+          <a href={`/team/${p.slug}`} class="person">
+            <span class={`person__photo tone-${p.tone}`}>
+              {p.photo
+                ? <img src={p.photo} alt="" width="150" height="150" loading="lazy" />
+                : <span class="person__initials">{p.initials}</span>}
+            </span>
+            <strong class="person__name">{p.name}</strong>
+            {p.role && <span class="person__role">{p.role}</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+  </div></section>
+)}
+
+<style>
+  /* ── Glass card + label + reveal (same look as the rest of the zone) ── */
+  .glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.62));
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    border-radius: 28px;
+    box-shadow:
+      0 0 0 1px rgba(124, 77, 255, 0.07),
+      0 26px 50px -26px rgba(90, 60, 170, 0.3),
+      0 4px 12px rgba(90, 60, 170, 0.05);
+  }
+
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.7s ease var(--d, 0ms),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms);
+  }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.95rem 0.5rem 0.8rem;
+    font: 800 0.72rem/1 'Raleway', sans-serif;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #1A1A1A;
+    background: #fff;
+    border: 1px solid rgba(124, 77, 255, 0.16);
+    border-radius: 999px;
+    box-shadow: 0 6px 16px -8px rgba(90, 60, 170, 0.3);
+  }
+  .pill__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #9F6ACD;
+    box-shadow: 0 0 0 3px rgba(159, 106, 205, 0.18);
+  }
+
+  /* ── Section ── */
+  .people-zone { position: relative; padding: 0 3vw 96px; }
+  .people-zone__inner { max-width: 1600px; margin: 0 auto; }
+
+  /* ── Layout ── */
+  .people {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 3.5rem);
+    padding: clamp(1.8rem, 3vw, 3rem) clamp(1.6rem, 3.5vw, 3.5rem);
+  }
+
+  .people__intro { display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; }
+
+  .people__title {
+    margin: 0;
+    font: 900 clamp(1.7rem, 2.6vw, 2.8rem)/1.08 'Raleway', sans-serif;
+    letter-spacing: -0.025em;
+    color: #1A1A1A;
+    max-width: 14ch;
+  }
+
+  .people__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font: 800 0.95rem/1 'Raleway', sans-serif;
+    color: #E9295D;
+    text-decoration: none;
+    padding-bottom: 3px;
+    border-bottom: 2px solid rgba(233, 41, 93, 0.3);
+    transition: border-color 0.3s ease, gap 0.3s ease;
+  }
+  .people__link svg { width: 15px; height: 15px; transition: transform 0.3s ease; }
+  .people__link:hover { border-color: #E9295D; }
+  .people__link:hover svg { transform: translateX(4px); }
+  .people__link:focus-visible { outline: 3px solid #3FD3D5; outline-offset: 4px; border-radius: 4px; }
+
+  /* ── People ── */
+  .people__list {
+    --size: clamp(104px, 8.6vw, 150px);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: clamp(0.8rem, 1.6vw, 1.8rem);
+  }
+  .people__list li { flex: 1 1 0; min-width: 0; }
+
+  .person {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .person:focus-visible { outline: 3px solid #3FD3D5; outline-offset: 6px; border-radius: 18px; }
+
+  .person__photo {
+    position: relative;
+    width: var(--size);
+    height: var(--size);
+    margin-bottom: 0.7rem;
+    transition: transform 0.5s cubic-bezier(0.34, 1.5, 0.5, 1);
+  }
+
+  /* the coloured shape behind each photo, offset a little like a sticker */
+  .person__photo::before {
+    content: '';
+    position: absolute;
+    inset: -7% -9% -3% -3%;
+    z-index: 0;
+    border-radius: 52% 48% 56% 44% / 48% 54% 46% 52%;
+    background: var(--tint);
+    transform: rotate(-6deg);
+    transition: transform 0.6s cubic-bezier(0.34, 1.5, 0.5, 1);
+  }
+  .tone-yellow { --tint: #FFD84D; }
+  .tone-teal   { --tint: #6FE0E2; }
+  .tone-pink   { --tint: #FF9DBA; }
+  .tone-purple { --tint: #C5A6F0; }
+
+  .person__photo img,
+  .person__initials {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 22%;
+    border: 4px solid #fff;
+    box-shadow: 0 14px 26px -12px rgba(40, 30, 80, 0.4);
+    background: #fff;
+  }
+  .person__initials {
+    display: grid;
+    place-items: center;
+    font: 900 calc(var(--size) * 0.3)/1 'Raleway', sans-serif;
+    color: #1A1A1A;
+  }
+
+  .person__name {
+    font: 800 clamp(0.95rem, 1.05vw, 1.1rem)/1.2 'Raleway', sans-serif;
+    color: #1A1A1A;
+    transition: color 0.3s ease;
+  }
+  .person__role {
+    font: 600 clamp(0.8rem, 0.85vw, 0.9rem)/1.3 'Raleway', sans-serif;
+    color: #6B7280;
+  }
+
+  .person:hover .person__photo { transform: translateY(-7px); }
+  .person:hover .person__photo::before { transform: rotate(8deg) scale(1.06); }
+  .person:hover .person__name { color: #E9295D; }
+
+  /* ── Smaller screens ── */
+  @media (max-width: 960px) {
+    .people-zone { padding: 0 5vw 72px; }
+    .people { grid-template-columns: 1fr; gap: 1.6rem; padding: 1.8rem 1.4rem; }
+    .people__title { max-width: none; }
+    /* one swipeable row so five people never squash */
+    .people__list {
+      --size: 112px;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 0.6rem 0.3rem 0.4rem;
+      margin: 0 -0.3rem;
+    }
+    .people__list::-webkit-scrollbar { display: none; }
+    .people__list li { flex: 0 0 auto; width: 132px; scroll-snap-align: start; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] { opacity: 1; transform: none; transition: none; }
+    .person__photo, .person__photo::before, .people__link svg { transition: none; }
+    .person:hover .person__photo, .person:hover .person__photo::before, .people__link:hover svg { transform: none; }
+  }
+</style>
