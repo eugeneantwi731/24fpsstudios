@@ -216,13 +216,20 @@ function isActive(href: string) {
 </header>
 
 <!-- ── MOBILE MENU ── -->
-<div class="mobile-menu" id="mobile-menu" aria-hidden="true">
-  {links.map(link => (
-    <a href={link.href} class={`mobile-link ${isActive(link.href) ? 'active' : ''}`}>
+<div class="mobile-menu" id="mobile-menu" aria-hidden="true" inert>
+  {links.map((link, i) => (
+    <a href={link.href} class={`mobile-link ${isActive(link.href) ? 'active' : ''}`} style={`--i:${i}`}>
       {link.label}
     </a>
   ))}
-  <a href="/join" class="mobile-cta">JOIN OUR CREW ↗</a>
+  <a href="/join" class="mobile-cta" style={`--i:${links.length}`}>
+    JOIN OUR CREW
+    <span class="cta-arrow" aria-hidden="true">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5L8 1Z" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </a>
 </div>
 
 <style>
@@ -415,7 +422,8 @@ function isActive(href: string) {
   }
 
   /* Star pops when the button is clicked (the sparks come from here) */
-  .nav-cta.is-sparking .cta-arrow svg {
+  .nav-cta.is-sparking .cta-arrow svg,
+  .mobile-cta.is-sparking .cta-arrow svg {
     animation: star-pop 0.55s cubic-bezier(0.3, 1.6, 0.5, 1);
   }
   @keyframes star-pop {
@@ -424,7 +432,8 @@ function isActive(href: string) {
     100% { transform: scale(1) rotate(180deg); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .nav-cta.is-sparking .cta-arrow svg { animation: none; }
+    .nav-cta.is-sparking .cta-arrow svg,
+    .mobile-cta.is-sparking .cta-arrow svg { animation: none; }
   }
 
   .cta-arrow svg {
@@ -443,6 +452,7 @@ function isActive(href: string) {
     cursor: pointer;
     padding: 4px;
     margin-left: auto;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .hamburger span {
@@ -451,12 +461,22 @@ function isActive(href: string) {
     height: 2px;
     background: var(--black);
     border-radius: 2px;
-    transition: all 0.3s;
+    transform-origin: center;
+    transition:
+      transform 0.5s cubic-bezier(0.65, 0, 0.25, 1),
+      opacity 0.25s ease,
+      background-color 0.3s ease;
   }
 
+  /* The three bars fold into an X (bars are 2px tall with a 5px gap, so 7px apart) */
+  .hamburger[aria-expanded='true'] span:nth-child(1) { transform: translateY(7px) rotate(45deg);  background: var(--pink); }
+  .hamburger[aria-expanded='true'] span:nth-child(2) { transform: scaleX(0); opacity: 0; }
+  .hamburger[aria-expanded='true'] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--pink); }
+
   /* ── MOBILE MENU ── */
+  /* Always laid out; hidden with opacity/visibility so it can animate in and out. */
   .mobile-menu {
-    display: none;
+    display: flex;
     position: fixed;
     top: 104px;
     left: 24px;
@@ -472,9 +492,52 @@ function isActive(href: string) {
       0 16px 48px rgba(63, 211, 213, 0.08),
       0 24px 64px rgba(0,0,0,0.08);
     border: 1px solid rgba(255,255,255,0.9);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-14px) scale(0.94);
+    transform-origin: top right;
+    transition:
+      opacity 0.25s ease,
+      transform 0.35s cubic-bezier(0.4, 0, 0.6, 1),
+      visibility 0s linear 0.35s;
   }
 
-  .mobile-menu.open { display: flex; }
+  .mobile-menu.open {
+    right: calc(24px + var(--sbw, 0px)); /* stays put when the page scrollbar goes away */
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition:
+      opacity 0.3s ease,
+      transform 0.55s cubic-bezier(0.34, 1.5, 0.5, 1),
+      visibility 0s;
+  }
+
+  /* Tabs pop up one after another */
+  .mobile-link,
+  .mobile-cta {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .mobile-menu.open .mobile-link,
+  .mobile-menu.open .mobile-cta {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.35s ease calc(var(--i, 0) * 55ms + 90ms),
+      transform 0.6s cubic-bezier(0.34, 1.55, 0.5, 1) calc(var(--i, 0) * 55ms + 90ms),
+      background-color 0.2s ease 0s,
+      color 0.2s ease 0s;
+  }
 
   .mobile-link {
     font-family: 'Raleway', sans-serif;
@@ -484,7 +547,6 @@ function isActive(href: string) {
     color: var(--black);
     padding: 0.85rem 1rem;
     border-radius: 10px;
-    transition: background 0.2s, color 0.2s;
   }
 
   .mobile-link:hover,
@@ -494,6 +556,10 @@ function isActive(href: string) {
   }
 
   .mobile-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
     font-family: 'Raleway', sans-serif;
     font-weight: 800;
     font-size: 0.85rem;
@@ -507,6 +573,27 @@ function isActive(href: string) {
     box-shadow: 0 4px 16px rgba(232, 56, 109, 0.35);
   }
 
+  /* Scroll lock while the menu is open: the scrollbar disappears, so the page and the
+     fixed navbar are padded by exactly its width and nothing shifts sideways. */
+  :global(html.menu-open) {
+    overflow: hidden;
+    padding-right: var(--sbw, 0px);
+  }
+  :global(html.menu-open) .nav-wrap {
+    padding-right: calc(24px + var(--sbw, 0px));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu, .mobile-menu.open,
+    .mobile-link, .mobile-cta,
+    .mobile-menu.open .mobile-link, .mobile-menu.open .mobile-cta,
+    .hamburger span { transition: none; }
+  }
+
+  @media (min-width: 901px) {
+    .mobile-menu { display: none; }
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .nav-links { display: none; }
@@ -518,34 +605,61 @@ function isActive(href: string) {
 <script>
   const hamburger = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobile-menu');
+  const root = document.documentElement;
+
+  function setMenu(open: boolean) {
+    if (!hamburger || !mobileMenu) return;
+    if (open) {
+      // width of the scrollbar that is about to disappear, so the layout can make room for it
+      root.style.setProperty('--sbw', (window.innerWidth - root.clientWidth) + 'px');
+    }
+    mobileMenu.classList.toggle('open', open);
+    root.classList.toggle('menu-open', open);
+    hamburger.setAttribute('aria-expanded', String(open));
+    hamburger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    mobileMenu.setAttribute('aria-hidden', String(!open));
+    if (open) mobileMenu.removeAttribute('inert');
+    else mobileMenu.setAttribute('inert', '');
+  }
 
   hamburger?.addEventListener('click', () => {
-    const isOpen = mobileMenu?.classList.contains('open');
-    mobileMenu?.classList.toggle('open');
-    hamburger?.setAttribute('aria-expanded', String(!isOpen));
-    document.body.style.overflow = isOpen ? '' : 'hidden';
+    setMenu(!mobileMenu?.classList.contains('open'));
   });
 
-  // Close on link click
-  document.querySelectorAll('.mobile-link, .mobile-cta').forEach(link => {
-    link.addEventListener('click', () => {
-      mobileMenu?.classList.remove('open');
-      hamburger?.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
+  // Tabs close the menu (the Join button handles its own close, see below)
+  document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => setMenu(false));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileMenu?.classList.contains('open')) {
+      setMenu(false);
+      hamburger?.focus();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!mobileMenu?.classList.contains('open')) return;
+    const t = e.target as Node;
+    if (!mobileMenu.contains(t) && !hamburger?.contains(t)) setMenu(false);
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 900 && mobileMenu?.classList.contains('open')) setMenu(false);
+  });
+
+  // Join our crew (bar button and menu button): pop the star and let its sparks play
+  // for a moment before the page changes. Modified clicks go through untouched.
+  document.querySelectorAll<HTMLAnchorElement>('.nav-cta, .mobile-cta').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      e.preventDefault();
+      btn.classList.remove('is-sparking');
+      void btn.offsetWidth; // restart the animation if clicked again
+      btn.classList.add('is-sparking');
+      const href = btn.href;
+      window.setTimeout(() => { window.location.href = href; }, 650);
     });
-  });
-
-  // Join our crew: pop the star and let its sparks play for a moment before the
-  // page changes. Modified clicks (new tab etc.) go through untouched.
-  const joinBtn = document.querySelector('.nav-cta') as HTMLAnchorElement | null;
-  joinBtn?.addEventListener('click', (e) => {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    e.preventDefault();
-    joinBtn.classList.remove('is-sparking');
-    void joinBtn.offsetWidth; // restart the animation if clicked again
-    joinBtn.classList.add('is-sparking');
-    const href = joinBtn.href;
-    window.setTimeout(() => { window.location.href = href; }, 650);
   });
 </script>

@@ -74,7 +74,7 @@ class ClickSpark {
     // Join our crew: the burst comes out of the star icon, not from the cursor,
     // and uses colours that stay visible on the pink button.
     let ox = e.clientX, oy = e.clientY, palette = null;
-    const cta = e.target.closest('.nav-cta');
+    const cta = e.target.closest('.nav-cta, .mobile-cta');
     const star = cta && cta.querySelector('.cta-arrow');
     if (star) {
       const r = star.getBoundingClientRect();
