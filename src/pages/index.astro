@@ -41,7 +41,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
 
 <BaseLayout title="Home">
   <section class="hero">
-    <div class="hero-inner">
+    <div class="hero-inner" data-dof>
       <div class="hero-copy">
         <img
           src={decodeCreateInspire}
@@ -94,6 +94,17 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
   <TrustAbout memberCount={memberCount} />
   <PeopleStrip people={people} />
 
+  <!-- Hero lightning (trial): light sweeps through the illustration's outlines, then
+       converges into the 24fps logo. Skipped when the visitor prefers reduced motion. -->
+  <script is:inline src="/hero-lightning.js?v=4"></script>
+  <script is:inline>
+    (function () {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var img = document.querySelector('.hero-illustration');
+      if (img && window.heroLightning) window.__heroFx = window.heroLightning(img, { glow: 0.75, cycle: 16 });
+    })();
+  </script>
+
   <dialog class="reel-dialog" id="reel-dialog" aria-label="Demo reel">
     <button type="button" class="reel-close" id="reel-close" aria-label="Close">
       <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -107,10 +118,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
 
   .hero {
     position: relative;
-    min-height: 100vh;
-    min-height: 100svh;
-    height: 100svh;
-    overflow: hidden;
+    overflow: hidden;   /* as tall as its content: the picture is already capped to fit the screen */
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -491,6 +499,8 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
 </style>
 
 <script>
+  import '../scripts/depth-of-field';
+
   const btn = document.getElementById('reel-btn') as HTMLButtonElement | null;
   const dialog = document.getElementById('reel-dialog') as HTMLDialogElement | null;
   const stage = document.getElementById('reel-stage');
@@ -624,7 +634,14 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     window.scrollTo({ top, behavior: calm ? 'auto' : 'smooth' });
   });
 
-  const toggleCue = () => cue?.classList.toggle('is-hidden', window.scrollY > 60);
-  window.addEventListener('scroll', toggleCue, { passive: true });
-  toggleCue();
+  // The cue fades and drifts away in step with the scroll (back in again on the way up).
+  const fadeCue = () => {
+    if (!cue) return;
+    const p = Math.min(1, Math.max(0, window.scrollY / 180));
+    cue.style.opacity = String(1 - p);
+    cue.style.transform = 'translateX(-50%) translateY(' + (p * 16).toFixed(1) + 'px)';
+    cue.style.pointerEvents = p > 0.85 ? 'none' : '';
+  };
+  window.addEventListener('scroll', fadeCue, { passive: true });
+  fadeCue();
 </script>
