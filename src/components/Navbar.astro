@@ -5,10 +5,10 @@ const currentPath = Astro.url.pathname;
 const links = [
   { label: 'HOME',      href: '/'          },
   { label: 'WORK',      href: '/work'       },
-  { label: 'TEAM',      href: '/team'       },
   { label: 'ABOUT',     href: '/about'      },
-  { label: 'RESOURCES', href: '/resources'  },
+  { label: 'TEAM',      href: '/team'       },
   { label: 'FEED',      href: '/feed'       },
+  { label: 'RESOURCES', href: '/resources'  },
 ];
 
 function isActive(href: string) {
@@ -39,6 +39,161 @@ function isActive(href: string) {
         </li>
       ))}
     </ul>
+    <script is:inline>
+      /* Shooting-ball tab indicator.
+         Pages are separate loads, so on click we remember which tab the ball sat
+         on; this script (inline, so it runs before first paint) then launches a
+         flying ball from that tab: a short wind-up, one fast eased shot stretched
+         along its path with a comet trail, and a squash-and-settle landing on the
+         new active tab. Farther trips take a little longer and go faster. The
+         resting .active-dot takes over once it lands. */
+      (function () {
+        var KEY = 'navBall';
+        var ul = document.querySelector('.nav-links');
+        var links = ul ? Array.prototype.slice.call(ul.querySelectorAll('.nav-link')) : [];
+        if (!links.length) return;
+
+        var activeIdx = -1;
+        links.forEach(function (l, i) { if (l.classList.contains('active')) activeIdx = i; });
+
+        // 1) On click, remember where the ball is now.
+        links.forEach(function (a) {
+          a.addEventListener('click', function (e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            try {
+              if (activeIdx < 0) sessionStorage.removeItem(KEY);
+              else sessionStorage.setItem(KEY, JSON.stringify({ from: activeIdx, ts: Date.now() }));
+            } catch (_) {}
+          });
+        });
+
+        // 2) On arrival, read it (once) and animate.
+        var from = -1;
+        try {
+          var raw = sessionStorage.getItem(KEY);
+          sessionStorage.removeItem(KEY);
+          if (raw) {
+            var o = JSON.parse(raw);
+            if (Date.now() - o.ts < 8000 && o.from >= 0 && o.from < links.length) from = o.from;
+          }
+        } catch (_) {}
+
+        var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var restDot = activeIdx >= 0 ? links[activeIdx].querySelector('.active-dot') : null;
+        if (reduce || from < 0 || !restDot || !ul.offsetWidth || document.hidden) return;
+
+        ul.classList.add('is-hopping');
+
+        var to = activeIdx;
+        var D = 7, PINK = '232,56,109';
+        var d = Math.abs(to - from);                       // tabs crossed
+        var CROUCH = 110;                                  // wind-up
+        var F = d === 0 ? 300 : 300 + d * 55;              // flight time: 355ms … 575ms
+        var LIFT = d === 0 ? 14 : Math.min(14, 6 + d * 2); // arc height (px)
+        var END = CROUCH + F + 300;                        // + landing settle
+
+        function ease(u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; } // in-out cubic
+
+        var ball = document.createElement('div');
+        ball.setAttribute('aria-hidden', 'true');
+        ball.style.cssText = 'position:fixed;left:0;top:0;width:' + D + 'px;height:' + D + 'px;border-radius:50%;' +
+          'background:rgb(' + PINK + ');transform-origin:50% 50%;pointer-events:none;z-index:1001;will-change:transform;';
+        // Comet trail: one tapered tail + two thin speed lines, all rotated along the path.
+        var trail = document.createElement('div');
+        trail.setAttribute('aria-hidden', 'true');
+        trail.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:1000;opacity:0;will-change:transform;';
+        function part(h, top, taper) {
+          var s = document.createElement('span');
+          s.style.cssText = 'position:absolute;right:0;top:' + top + 'px;height:' + h + 'px;border-radius:99px;' +
+            'background:linear-gradient(to right,rgba(' + PINK + ',0),rgba(' + PINK + ',' + (taper ? 0.85 : 0.55) + '));' +
+            (taper ? 'clip-path:polygon(0 50%,100% 0,100% 100%);' : '');
+          trail.appendChild(s);
+          return s;
+        }
+        var tail = part(D * 0.8, -D * 0.4, true);
+        var lineA = part(1.5, -D * 0.95, false);
+        var lineB = part(1.5, D * 0.95 - 1.5, false);
+        document.body.appendChild(trail);
+        document.body.appendChild(ball);
+
+        function centers() {
+          return links.map(function (l) { var r = l.getBoundingClientRect(); return r.left + r.width / 2; });
+        }
+
+        var t0 = 0, prev = null, sv = 0, ang = 0, done = false;
+        function finish() {
+          if (done) return;
+          done = true;
+          ball.remove(); trail.remove();
+          ul.classList.remove('is-hopping');
+        }
+        window.addEventListener('pageshow', function (e) { if (e.persisted) finish(); });
+        setTimeout(finish, END + 2500); // safety net if frames are throttled
+
+        function frame(ts) {
+          if (done) return;
+          if (!t0) t0 = ts;
+          var now = ts - t0;
+          if (now >= END) return finish();
+
+          var cs = centers();
+          var base = restDot.getBoundingClientRect().bottom;   // floor
+          var dir = to >= from ? 1 : -1;
+          var x, lift = 0, sx = 1, sy = 1, flying = false;
+
+          if (now < CROUCH) {
+            // 1) wind-up: sink and pull back slightly, like drawing a bow
+            var c = now / CROUCH, e = 1 - (1 - c) * (1 - c);
+            x = cs[from] - dir * 4 * e;
+            sy = 1 - 0.38 * e; sx = 1 + 0.32 * e;
+          } else if (now < CROUCH + F) {
+            // 2) the shot: ease-in-out along a shallow arc
+            flying = true;
+            var u = (now - CROUCH) / F, k = ease(u);
+            var startX = cs[from] - dir * 4;
+            x = startX + (cs[to] - startX) * k;
+            lift = LIFT * Math.sin(Math.PI * u);
+          } else {
+            // 3) landing: one squash that rebounds and settles
+            var dt = now - CROUCH - F;
+            x = cs[to];
+            var q = 0.5 * Math.exp(-dt / 70) * Math.cos(dt / 42);
+            sy = 1 - q; sx = 1 + q * 0.85;
+          }
+
+          var cy = base - D / 2 - lift;
+          var cx = x;
+          var vx = 0, vy = 0;
+          if (prev) {
+            var dtf = Math.max(1, ts - prev.ts);
+            vx = (cx - prev.x) / dtf; vy = (cy - prev.y) / dtf;
+            sv = sv * 0.45 + Math.hypot(vx, vy) * 0.55;
+            if (sv > 0.05) ang = Math.atan2(vy, vx) * 180 / Math.PI;
+          }
+
+          if (flying) {
+            // stretch along the direction of travel (area-preserving), scaled by speed
+            var sa = 1 + Math.min(1.5, sv * 1.25);
+            ball.style.transform = 'translate(' + (cx - D / 2) + 'px,' + (cy - D / 2) + 'px) rotate(' + ang + 'deg) scale(' + sa + ',' + (1 / Math.sqrt(sa)) + ')';
+          } else {
+            // squash against the floor: keep the bottom planted
+            ball.style.transform = 'translate(' + (cx - D / 2) + 'px,' + (cy - D / 2 + D * (1 - sy) / 2) + 'px) scale(' + sx + ',' + sy + ')';
+          }
+
+          // trail only while moving fast
+          var len = flying ? Math.min(78, sv * 85) : 0;
+          trail.style.opacity = Math.max(0, Math.min(1, (len - 6) / 16));
+          trail.style.transform = 'translate(' + cx + 'px,' + cy + 'px) rotate(' + ang + 'deg)';
+          tail.style.width = len + 'px';
+          lineA.style.width = len * 0.55 + 'px';
+          lineB.style.width = len * 0.4 + 'px';
+
+          prev = { x: cx, y: cy, ts: ts };
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+      })();
+    </script>
 
     <!-- ── CTA ── -->
     <a href="/join" class="nav-cta">
@@ -121,7 +276,7 @@ function isActive(href: string) {
   .navbar::after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -4.5px;
     left: 5px;
     right: 5px;
     height: 60px;
@@ -209,18 +364,22 @@ function isActive(href: string) {
     color: var(--pink);
   }
 
-  /* Active dot */
+  /* Active dot — the resting spot of the bouncing ball (see script below) */
   .active-dot {
     display: block;
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--pink);
     position: absolute;
-    bottom: -4px;
+    bottom: -5px;
     left: 50%;
     transform: translateX(-50%);
   }
+
+  /* While the flying ball is mid-hop, hide the resting dot (keeps its layout
+     so we can still measure where the ball needs to land). */
+  .nav-links.is-hopping .active-dot { opacity: 0; }
 
   /* ── CTA BUTTON ── */
   .nav-cta {
