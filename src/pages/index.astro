@@ -170,6 +170,16 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
   .btn:active { transform: translateY(0) scale(0.975); transition-duration: 0.1s; }
   .btn:focus-visible { outline: 3px solid #3FD3D5; outline-offset: 4px; }
 
+  /* Keeps the hover area where the button was while it is lifted (prevents hover flicker) */
+  .btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -4px;
+    bottom: -8px;
+  }
+
   /* Pink */
   .btn--primary {
     color: #fff;
@@ -197,6 +207,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
     background-position: 0 0;
     -webkit-backdrop-filter: blur(18px) saturate(1.5);
     backdrop-filter: blur(18px) saturate(1.5);
+    will-change: transform;
     box-shadow:
       inset 0 1.5px 0 rgba(255, 255, 255, 1),
       inset 0 -1px 0 rgba(255, 255, 255, 0.6),
@@ -250,7 +261,7 @@ const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only,
   .btn--primary:hover .btn__icon { transform: scale(1.06); }
 
   /* Glass: the arrow well fills pink */
-  .btn--glass:hover .btn__icon { background: #E9295D; color: #fff; transform: scale(1.06); }
+  .btn--glass:hover .btn__icon { background: #E9295D; color: #fff; }
 
   @media (min-width: 1200px) {
     .btn {
