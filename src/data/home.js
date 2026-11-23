@@ -7,7 +7,7 @@
 
 export const hero = {
   // Short line under the "Decode. Create. Inspire." lettering.
-  sub: 'A creative animation lab for dreamers, builders and storytellers at KNUST.',
+  sub: 'A student-led animation club and studio at KNUST, turning stories into motion.',
 
   // Demo reel for the "Watch demo reel" button.
   // Paste a YouTube link (https://youtu.be/... or https://www.youtube.com/watch?v=...)
