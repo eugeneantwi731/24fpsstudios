@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { hero } from '../data/home.js';
 
 const decodeCreateInspire = '/images/decode-create-inpire.svg';
-const heroIllustration = '/images/24fps-illustration.png';
+const heroIllustration = '/images/24fps-illustration-trim.png'; // artwork only, empty margins trimmed
 ---
 
 <BaseLayout title="Home">
@@ -36,6 +36,14 @@ const heroIllustration = '/images/24fps-illustration.png';
             </span>
           </a>
         </div>
+
+        <button type="button" class="scroll-cue" id="scroll-cue" aria-label="Scroll down">
+        <svg class="scroll-cue__arrow" viewBox="0 0 15.89 39.23" fill="none" aria-hidden="true">
+          <path class="scroll-cue__line" pathLength="1" d="M1.68 0.87c-1.16,6.38 -2.28,16.94 5.91,19.17 8.3,2.26 10.25,-11.77 2.78,-8.44 -4.81,2.15 -4.68,9.95 -3.75,14.26 0.91,4.24 2.54,8.58 4.4,12.49" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="scroll-cue__head" d="M14.6 29.4C13.56 31.69 11.52 36.09 11.02 38.35C11.02 38.35 3.6 34.26 2.58 33.23" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="scroll-cue__label">Scroll down</span>
+      </button>
       </div>
 
       <div class="hero-visual">
@@ -43,19 +51,11 @@ const heroIllustration = '/images/24fps-illustration.png';
           src={heroIllustration}
           alt="24fps animators and illustrators at work, sketching on tablets"
           class="hero-illustration"
-          width="1080"
-          height="1080"
+          width="1060"
+          height="922"
         />
       </div>
     </div>
-
-    <button type="button" class="scroll-cue" id="scroll-cue" aria-label="Scroll down">
-      <svg class="scroll-cue__arrow" viewBox="0 0 15.89 39.23" fill="none" aria-hidden="true">
-        <path class="scroll-cue__line" pathLength="1" d="M1.68 0.87c-1.16,6.38 -2.28,16.94 5.91,19.17 8.3,2.26 10.25,-11.77 2.78,-8.44 -4.81,2.15 -4.68,9.95 -3.75,14.26 0.91,4.24 2.54,8.58 4.4,12.49" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="scroll-cue__head" d="M14.6 29.4C13.56 31.69 11.52 36.09 11.02 38.35C11.02 38.35 3.6 34.26 2.58 33.23" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span class="scroll-cue__label">Scroll down</span>
-    </button>
   </section>
 
   <dialog class="reel-dialog" id="reel-dialog" aria-label="Demo reel">
@@ -73,9 +73,13 @@ const heroIllustration = '/images/24fps-illustration.png';
     position: relative;
     min-height: 100vh;
     min-height: 100svh;
+    height: 100svh;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    padding: 140px 3vw 2rem;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start; /* content hugs the navbar instead of floating in the middle */
+    padding: 104px 3vw 20px;
   }
 
   .hero-inner {
@@ -92,6 +96,8 @@ const heroIllustration = '/images/24fps-illustration.png';
   }
 
   .hero-copy {
+    align-self: start;                     /* sits high, under the navbar */
+    padding-top: clamp(6px, 1.6vh, 22px);
     position: relative;
     z-index: 2; /* above the illustration, so the buttons can overlap its edge */
     display: flex;
@@ -101,11 +107,10 @@ const heroIllustration = '/images/24fps-illustration.png';
   }
 
   .hero-headline {
-    width: 100%;
-    max-width: 1400px;
+    width: 112%;
+    max-width: none;
     height: auto;
     display: block;
-    margin-top: -5rem;    /* new */
     position: relative;
     z-index: 1;
   }
@@ -135,13 +140,15 @@ const heroIllustration = '/images/24fps-illustration.png';
      slides in from the left. */
   .btn {
     --ease: cubic-bezier(0.65, 0, 0.25, 1);
+    --h: 60px;                       /* button height; everything else scales from it */
+    --icon: calc(var(--h) - 16px);   /* round icon well */
     position: relative;
     isolation: isolate;
     display: inline-flex;
     align-items: center;
     gap: 1.6rem;
-    height: 60px;
-    padding: 0 8px 0 1.9rem;
+    height: var(--h);
+    padding: 0 8px 0 calc(var(--h) * 0.32);
     font-family: 'Raleway', sans-serif;
     font-weight: 700;
     font-size: 1rem;
@@ -211,8 +218,8 @@ const heroIllustration = '/images/24fps-illustration.png';
   .btn__icon {
     position: relative;
     flex-shrink: 0;
-    width: 44px;
-    height: 44px;
+    width: var(--icon);
+    height: var(--icon);
     display: grid;
     place-items: center;
     overflow: hidden;
@@ -226,24 +233,32 @@ const heroIllustration = '/images/24fps-illustration.png';
 
   .btn__glyph {
     grid-area: 1 / 1;
-    width: 18px;
-    height: 18px;
+    width: calc(var(--icon) * 0.41);
+    height: calc(var(--icon) * 0.41);
     display: block;
     transition: transform 0.55s var(--ease);
   }
   .btn__icon--play .btn__glyph { margin-left: 2px; } /* optical centre for a triangle */
 
   /* The spare copy waits off to the left... */
-  .btn__glyph--in { transform: translateX(-44px); }
+  .btn__glyph--in { transform: translateX(calc(-1 * var(--icon))); }
 
   /* ...and on hover the old one exits right while the new one slides in. */
-  .btn:hover .btn__glyph:not(.btn__glyph--in) { transform: translateX(44px); }
+  .btn:hover .btn__glyph:not(.btn__glyph--in) { transform: translateX(var(--icon)); }
   .btn:hover .btn__glyph--in { transform: translateX(0); }
 
   .btn--primary:hover .btn__icon { transform: scale(1.06); }
 
   /* Glass: the arrow well fills pink */
   .btn--glass:hover .btn__icon { background: #E9295D; color: #fff; transform: scale(1.06); }
+
+  @media (min-width: 1200px) {
+    .btn {
+      --h: clamp(70px, 4vw, 84px);
+      font-size: clamp(1.1rem, 0.45vw + 0.7rem, 1.3rem);
+      gap: 2rem;
+    }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn__icon, .btn__glyph { transition: none; }
@@ -261,27 +276,25 @@ const heroIllustration = '/images/24fps-illustration.png';
   .hero-illustration {
     width: auto;
     max-width: 100%;
-    /* The whole hero must be on screen without scrolling: on a window that is
-       short for its width, the picture follows the height instead of overflowing.
-       When it already fits, this changes nothing. */
-    max-height: calc(100svh - 150px);
+    /* As large as the column allows, but never taller than the space between the
+       navbar and the bottom of the window, so the whole hero is visible on load. */
+    max-height: calc(100svh - 132px);
     height: auto;
     display: block;
-    margin-top: -4rem;    /* new */
-    position: relative;
-    top: -2.5rem;         /* nudged up; moves the picture, not the layout */
   }
 
   /* ── Scroll cue (bottom centre of the hero) ── */
   .scroll-cue {
+    /* Sits a small fixed distance under the buttons. The text column is 40% of the
+       row, so 125% of its width lands on the centre of the page. */
     position: absolute;
-    left: 50%;
-    top: calc(100svh - clamp(6.25rem, 13vh, 8.5rem));
+    left: 125%;
+    top: calc(100% + 24px);
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 0.95rem;
-    padding: 0.4rem 0.6rem;
+    padding: 0.2rem 0.6rem;
     background: none;
     border: none;
     color: #1A1A1A;
@@ -364,6 +377,18 @@ const heroIllustration = '/images/24fps-illustration.png';
   }
 
   @media (max-width: 960px) {
+    .scroll-cue {
+      position: static;
+      transform: none;
+      margin: 22px auto 0;
+    }
+    .scroll-cue.is-hidden { transform: translateY(8px); }
+
+    .hero {
+      height: auto;
+      overflow: visible;
+    }
+
     .hero-inner {
       grid-template-columns: 1fr;
       gap: 1rem;
@@ -493,8 +518,8 @@ const heroIllustration = '/images/24fps-illustration.png';
   // Nothing fades.
   const TIP = { x: 11.02, y: 38.35 };   // the arrow tip, in the SVG's own coordinates
   const SMALL = 0.28;                    // head scale while travelling
-  const DRAW = 1300;                     // ms to trim the line on (smooth, unhurried)
-  const GROW = 420;                      // ms for the head to grow at the end
+  const DRAW = 900;                      // ms to trim the line on
+  const GROW = 320;                      // ms for the head to grow at the end
 
   const easeInOut = (u: number) => -(Math.cos(Math.PI * u) - 1) / 2; // sine in-out: gentle at both ends
   const backOut = (u: number) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(u - 1, 3) + c1 * Math.pow(u - 1, 2); };
