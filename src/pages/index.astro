@@ -259,8 +259,12 @@ const heroIllustration = '/images/24fps-illustration.png';
   }
 
   .hero-illustration {
-    width: 100%;
-    max-width: 1800px;   /* was 1200px */
+    width: auto;
+    max-width: 100%;
+    /* The whole hero must be on screen without scrolling: on a window that is
+       short for its width, the picture follows the height instead of overflowing.
+       When it already fits, this changes nothing. */
+    max-height: calc(100svh - 150px);
     height: auto;
     display: block;
     margin-top: -4rem;    /* new */
@@ -386,6 +390,7 @@ const heroIllustration = '/images/24fps-illustration.png';
 
     .hero-illustration {
       max-width: 460px;
+      max-height: none;
     }
   }
 
