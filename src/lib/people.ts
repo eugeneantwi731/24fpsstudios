@@ -53,18 +53,11 @@ function initialsOf(name: string): string {
   return name.split(/\s+/).filter(Boolean).map((w) => w[0]?.toUpperCase()).slice(0, 2).join('');
 }
 
-// small seeded shuffle so the same people show all day and the set rotates daily
-function seededShuffle<T>(list: T[], seed: number): T[] {
+// Fisher-Yates shuffle: a fresh random order on every call
+function shuffle<T>(list: T[]): T[] {
   const a = [...list];
-  let t = seed >>> 0;
-  const rand = () => {
-    t += 0x6d2b79f5;
-    let x = Math.imul(t ^ (t >>> 15), 1 | t);
-    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
+    const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -72,22 +65,21 @@ function seededShuffle<T>(list: T[], seed: number): T[] {
 
 const TONES: HomePerson['tone'][] = ['yellow', 'teal', 'pink', 'purple', 'yellow'];
 
-/** Coordinators first (they run the club), then a daily-rotating selection of the rest. */
-export function pickForHome(all: PublicMember[], count = 5, now = new Date()): HomePerson[] {
+/** A random selection of members who have a photo. Different on every page load, so
+ *  every visitor (and every refresh) sees a different set. */
+export function pickForHome(all: PublicMember[], count = 5): HomePerson[] {
   const withPhoto = dedupeMembers(all).filter((m) => m.photo_url);
-  const isLead = (m: PublicMember) => /coordinator/i.test(m.role || '');
-  const leads = withPhoto.filter(isLead);
-  const day = Math.floor(now.getTime() / 86400000);
-  const rest = seededShuffle(withPhoto.filter((m) => !isLead(m)), day);
-  return [...leads, ...rest].slice(0, count).map((m, i) => {
-    const name = displayName(m.name);
-    return {
-      slug: m.slug,
-      name,
-      role: displayRole(m.role),
-      photo: m.photo_url,
-      initials: initialsOf(name),
-      tone: TONES[i % TONES.length],
-    };
-  });
+  return shuffle(withPhoto)
+    .slice(0, count)
+    .map((m, i) => {
+      const name = displayName(m.name);
+      return {
+        slug: m.slug,
+        name,
+        role: displayRole(m.role),
+        photo: m.photo_url,
+        initials: initialsOf(name),
+        tone: TONES[i % TONES.length],
+      };
+    });
 }

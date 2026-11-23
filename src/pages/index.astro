@@ -6,6 +6,9 @@ import PeopleStrip from '../components/home/PeopleStrip.astro';
 import { dedupeMembers, pickForHome, type PublicMember } from '../lib/people';
 import { createClient } from '@supabase/supabase-js';
 
+// The strip is random per visit, so this page must not be cached and shared between visitors.
+Astro.response.headers.set('Cache-Control', 'no-store');
+
 // Published members, read with the same public, read-only access as /team (the anon key can
 // only see published rows). Used for the live member count and the "Meet the team" strip.
 // If anything goes wrong, the count and the strip are simply left out.
